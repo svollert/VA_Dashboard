@@ -1,0 +1,10 @@
+Model: rmsprop relu
+Model: rmsprop elu
+Model: adam relu
+Model: adam elu
+Model: sgd relu
+Model: sgd elu
+Model: adagrad relu
+Model: adagrad elu
+Model: adadelta relu
+Model: adadelta elu
