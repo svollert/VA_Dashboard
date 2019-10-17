@@ -720,11 +720,12 @@ server = function(input, output, session) {
   
   boxplotplot <- reactive({
     cm <- selected_models()
-    cm_col <- colSums(cm)/length(input$models)
-    print(cm_col)
+    cm_col <- vector(mode="numeric")
+    for(i in seq(1, length(input$models))) {
+      cm_col <- append(cm_col, colSums(cm[((i*ncol(cm))-(ncol(cm)-1)):(((i*ncol(cm))-(ncol(cm)-1))+(ncol(cm)-1)),]))
+    }
     cm_row <- rowSums(cm)
     precision <- cm/cm_col
-    print(precision)
     recall <- cm/cm_row
     f1 <- 2 * ((precision * recall) / (precision+recall))
     results <- data.frame(Score = numeric(), Model = numeric(), Metric = character(), stringsAsFactors = FALSE)
@@ -733,7 +734,6 @@ server = function(input, output, session) {
       vector_model <- vector(mode="character")
       vector_metric <- vector(mode="character")
       for(j in seq(1,ncol(cm))) {
-        #vector_score <- append(vector_score, round(precision[((i*10)-9)+(j-1),j], digits=4))
         vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "Precision")
@@ -746,7 +746,6 @@ server = function(input, output, session) {
       vector_model <- vector(mode="character")
       vector_metric <- vector(mode="character")
       for(j in seq(1,ncol(cm))) {
-        #vector_score <- append(vector_score, round(recall[((i*10)-9)+(j-1),j], digits=4))
         vector_score <- append(vector_score, round(recall[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "Recall")
@@ -759,7 +758,6 @@ server = function(input, output, session) {
       vector_model <- vector(mode="character")
       vector_metric <- vector(mode="character")
       for(j in seq(1,ncol(cm))) {
-        #vector_score <- append(vector_score, round(f1[((i*10)-9)+(j-1),j], digits=4))
         vector_score <- append(vector_score, round(f1[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "F1")
@@ -768,7 +766,7 @@ server = function(input, output, session) {
       results <- rbind(results, df_model)
     }
 
-    p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box", boxpoints = "all") %>%
+    p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group")
     p
   })
