@@ -246,7 +246,7 @@ server = function(input, output, session) {
   
   samples <- reactive({
     if(is.null(input$models)){return(0)}
-    samples <- sum(data()[1:ncol(data()), 1:ncol(data())])
+    samples <- as.integer(sum(selected_models()) / length(input$models))
     samples
   })
   
@@ -292,7 +292,7 @@ server = function(input, output, session) {
     ))}
     bs4InfoBox(
       title = "Average Accuracy",
-      (sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()),
+      round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()), 4),
       icon = "credit-card",
       status = "primary"
     )
@@ -307,7 +307,7 @@ server = function(input, output, session) {
     ))}
     bs4InfoBox(
       title = "Baseline Accuracy",
-      max(colSums(selected_models())) / sum(selected_models()),
+      round(max(colSums(selected_models())) / sum(selected_models()),4),
       icon = "credit-card",
       status = "primary"
     )
