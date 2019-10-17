@@ -79,15 +79,7 @@ ui = bs4DashPage(
                                                                      selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
                                  h5(helpText("Select the Classes which are not relevant")),
-                                 pickerInput(inputId = "classes",
-                                             choices = "",
-                                             options = pickerOptions(actionsBox = TRUE,
-                                                                     showTick = TRUE,
-                                                                     size = 10,
-                                                                     selectedTextFormat = "count > 3"),
-                                             multiple = TRUE)),
-                                 #checkboxInput("classnamesheader", label = "Classnames in Header?", value = TRUE)),
-
+                                 uiOutput("classlimit")),
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
                                             h2("Comparison of different classification models"),
@@ -154,9 +146,6 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "debug", textOutput("test")))))))
 
 
-
-
-
 server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
@@ -172,7 +161,16 @@ server = function(input, output, session) {
     read.table(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
   })
   
-
+  output$classlimit <- renderUI({
+    pickerInput(inputId = "classes",
+                choices = "",
+                options = pickerOptions(actionsBox = FALSE,
+                                        showTick = TRUE,
+                                        size = 10,
+                                        selectedTextFormat = "count > 3",
+                                        maxOptions = length(classnames()) -3),
+                multiple = TRUE)   
+  })
   
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
