@@ -173,7 +173,7 @@ server = function(input, output, session) {
     rows <- sort(rows)
     data <- data()[rows,]
     if(!is.null(input$classes)){
-      delseq <- rep(classdelete(), each = ncol(data)) + seq(0,nrow(data)-1,ncol(data))
+      delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
       data[-delseq, -classdelete()]
     }
     else{
@@ -194,7 +194,7 @@ server = function(input, output, session) {
     d <- cbind(a,b)
     sel_models[d] <- 0
     if(!is.null(input$classes)){
-      delseq <- rep(classdelete(), each = ncol(sel_models)) + seq(0,nrow(sel_models)-1,ncol(sel_models))
+      delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(sel_models)-1,ncol(sel_models))
       sel_models[-delseq, -classdelete()]
     }
     else{
@@ -701,7 +701,7 @@ server = function(input, output, session) {
     missclassified_data <- selected_models_missclassified()
     chunk <- ncol(data)
     n <- nrow(data)
-    r  <- rep(1:ceiling(n/chunk),each=chunk)[1:n]
+    r  <- rep(1:length(input$models),each=chunk)[1:n]
     d <- split(data,r)
     d_miss <- split(missclassified_data, r)
     e <- c()
