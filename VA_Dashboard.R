@@ -57,9 +57,15 @@ ui = bs4DashPage(
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
+                                 h5(helpText("Upload a Confusion Matrix file")),
                                  fileInput("file", accept = c(".csv"), label = "Upload a File", buttonLabel = "Search"),
-                                 checkboxInput(inputId = "header", label = "Header", value = TRUE),
+                                 #checkboxInput(inputId = "header", label = "Header", value = TRUE),
                                  pickerInput(inputId = "sep", label = "Separator", choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
+                                 h5(helpText("Upload model descriptions")),
+                                 fileInput("modelnames", accept = c(".csv", ".txt"), label = "Upload the Model Descriptions", buttonLabel = "Search"),
+                                 pickerInput(inputId = "sep2", label = "Separator", choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
+                                 #checkboxInput(inputId = "header2", label = "Header", value = FALSE),
+                                 h5(helpText("Select the Models")),
                                  pickerInput(inputId = "models",
                                              label = "Select all models",
                                              choices = "",
@@ -68,18 +74,16 @@ ui = bs4DashPage(
                                                                      size = 10,
                                                                      selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
+                                 h5(helpText("Select the Classes which are not relevant")),
                                  pickerInput(inputId = "classes",
                                              choices = "",
                                              options = pickerOptions(actionsBox = TRUE,
                                                                      showTick = TRUE,
                                                                      size = 10,
                                                                      selectedTextFormat = "count > 3"),
-                                             multiple = TRUE),
-                                 checkboxInput("classnamesheader", label = "Classnames in Header?", value = TRUE),
-                                 h5(helpText("Upload model descriptions")),
-                                 fileInput("modelnames", accept = c(".csv", ".txt"), label = "Upload the Model Descriptions", buttonLabel = "Search"),
-                                 pickerInput(inputId = "sep2", label = "Separator", choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
-                                 checkboxInput(inputId = "header2", label = "Header", value = FALSE)),
+                                             multiple = TRUE)),
+                                 #checkboxInput("classnamesheader", label = "Classnames in Header?", value = TRUE)),
+
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
                                             h2("Comparison of different classification models"),
@@ -153,13 +157,15 @@ server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
     if(is.null(file1)){return()}
-    read.table(file=file1$datapath, sep = input$sep, header = input$header, stringsAsFactors = FALSE)
+    #read.table(file=file1$datapath, sep = input$sep, header = input$header, stringsAsFactors = FALSE)
+    read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
   })
   
   modelnames <- reactive({
     modelnames <- input$modelnames
     if(is.null(modelnames)){return()}
-    read.table(file=modelnames$datapath, sep = input$sep2, header = input$header2, stringsAsFactors = FALSE)
+    #read.table(file=modelnames$datapath, sep = input$sep2, header = input$header2, stringsAsFactors = FALSE)
+    read.table(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
   })
   
 
@@ -202,14 +208,18 @@ server = function(input, output, session) {
     }
   })
   
+#  classnames <- reactive({
+#    classnames <- input$classnames
+#    if(input$classnamesheader == FALSE){return()}
+#    if(input$classnamesheader == TRUE){
+#      classnames <- colnames(data())
+#      return(classnames)
+#    }
+#  })
+  
   classnames <- reactive({
-    classnames <- input$classnames
-    if(input$classnamesheader == FALSE){return()}
-    if(input$classnamesheader == TRUE){
-      classnames <- colnames(data())
-      return(classnames)
-    }
-  })
+    classnames <- colnames(data())
+    })
   
   selected_classes <- reactive({
     selected_classes <- colnames(selected_models())
@@ -220,6 +230,7 @@ server = function(input, output, session) {
     options <- classnames()
     colChoice <- match(input$classes,options)
   })
+  
   
   output$test <- renderText({
     #classdelete <- as.numeric(c(substring(input$classes, 6)))
