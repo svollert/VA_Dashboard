@@ -68,13 +68,7 @@ ui = bs4DashPage(
                                                                      size = 10,
                                                                      selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
-                                 pickerInput(inputId = "classes",
-                                             choices = "",
-                                             options = pickerOptions(actionsBox = TRUE,
-                                                                     showTick = TRUE,
-                                                                     size = 10,
-                                                                     selectedTextFormat = "count > 3"),
-                                             multiple = TRUE),
+                                 uiOutput("classlimit"),
                                  checkboxInput("classnamesheader", label = "Classnames in Header?", value = TRUE),
                                  h5(helpText("Upload model descriptions")),
                                  fileInput("modelnames", accept = c(".csv", ".txt"), label = "Upload the Model Descriptions", buttonLabel = "Search"),
@@ -146,9 +140,6 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "debug", textOutput("test")))))))
 
 
-
-
-
 server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
@@ -162,7 +153,16 @@ server = function(input, output, session) {
     read.table(file=modelnames$datapath, sep = input$sep2, header = input$header2, stringsAsFactors = FALSE)
   })
   
-
+  output$classlimit <- renderUI({
+    pickerInput(inputId = "classes",
+                choices = "",
+                options = pickerOptions(actionsBox = TRUE,
+                                        showTick = TRUE,
+                                        size = 10,
+                                        selectedTextFormat = "count > 3",
+                                        maxOptions = length(classnames()) -2),
+                multiple = TRUE)   
+  })
   
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
