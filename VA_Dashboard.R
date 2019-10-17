@@ -65,9 +65,9 @@ ui = bs4DashPage(
                                  #checkboxInput(inputId = "header", label = "Header", value = TRUE),
                                  h5(helpText("Upload model descriptions")),
                                  h6(helpText("Choose the seperator")),
-                                 pickerInput(inputId = "sep2", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
+                                 pickerInput(inputId = "sep2", label = NULL, choices = c(Newline = "\n", Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = "\n", multiple = FALSE),
                                  h6(helpText("Choose the file")),
-                                 fileInput("modelnames", accept = c(".csv", ".txt"), label = NULL, buttonLabel = "Search"),
+                                 fileInput("modelnames", accept = c(".txt"), label = NULL, buttonLabel = "Search"),
                                  #checkboxInput(inputId = "header2", label = "Header", value = FALSE),
                                  h5(helpText("Select the Models")),
                                  pickerInput(inputId = "models",
@@ -156,10 +156,20 @@ server = function(input, output, session) {
   
   modelnames <- reactive({
     modelnames <- input$modelnames
-    if(is.null(modelnames)){return()}
+    if(is.null(modelnames) && is.null(data())){return()}
+    if(is.null(modelnames)){
+      models <- paste("Model", 1:(nrow(data())/ncol(data())))
+      return(models)
+    }
     #read.table(file=modelnames$datapath, sep = input$sep2, header = input$header2, stringsAsFactors = FALSE)
-    read.table(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
+    #models <- read.table(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
+    models <- read.delim(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
+    models <- unlist(models)
+    models <- unname(models)
+    models <- c(models)
   })
+  
+  
   
   output$classlimit <- renderUI({
     pickerInput(inputId = "classes",
@@ -174,11 +184,13 @@ server = function(input, output, session) {
   
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
-    input$models
-    rows <- c(substring(input$models, 7))
+    options <- modelnames()
+    rows <- match(input$models,options)
+    print(rows)
     rows <- as.numeric(rows) * ncol(data())
     rows <- c(rep(rows, each = ncol(data())) - 0:(ncol(data()) - 1))
     rows <- sort(rows)
+    print(rows)
     data <- data()[rows,]
     if(!is.null(input$classes)){
       delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
@@ -191,8 +203,8 @@ server = function(input, output, session) {
   
   selected_models_missclassified <- reactive({
     if(is.null(modelnames)){return()}
-    input$models
-    rows <- c(substring(input$models, 7))
+    options <- modelnames()
+    rows <- match(input$models,options)
     rows <- as.numeric(rows) * ncol(data())
     rows <- c(rep(rows, each = ncol(data())) - 0:(ncol(data()) - 1))
     rows <- sort(rows)
@@ -239,7 +251,7 @@ server = function(input, output, session) {
     #rep(classdelete, each = 10) + seq(0,99,10)
     #options <- paste("Class", 1:10)
     #colChoice <- match(input$classes,options)
-    print(selected_classes())
+    print(selected_models())
   })
   
   samples <- reactive({
@@ -414,8 +426,9 @@ server = function(input, output, session) {
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     parcoord_data <- selected_models_missclassified()
-    models <- input$models
-    models <- as.integer(substring(models, 7))
+    #models <- input$models
+    #models <- as.integer(substring(models, 7))
+    models <- match(input$models,modelnames())
     classes <- selected_classes()
     #sums <- colSums(matrix(t(parcoord_data), nrow = ncol(parcoord_data)))
     cm2=data.frame(matrix(ncol=0,nrow=ncol(parcoord_data)))
@@ -423,15 +436,15 @@ server = function(input, output, session) {
       cm2 <- cbind(cm2, parcoord_data[i:(i+ncol(parcoord_data)-1), ])
     }
     sums <- t(matrix(colSums(cm2), nrow = nrow(cm2)))
-    
     max_missclassified <- max(sums)
     parcoord_data <- as.data.frame(cbind(models, sums))
     colnames(parcoord_data) <- c("Models", classes)
     
-    start_statement = "list(list(range = c(1, max(models)),label = 'Model', values = ~Models),"
+    start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
+    print(input$models)
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
-      text = sprintf("list(label = '%s', values = ~`%s`),", classes[i], classes[i])
+      text = sprintf("list(range = c(0,max_missclassified),label = '%s', values = ~`%s`),", classes[i], classes[i]) # Range entfernen um Balken zu skalieren
       loop_liste = c(loop_liste, text)
       if(i == ncol(selected_models_missclassified())){
         loop_liste[i+1] = substring(loop_liste[i+1], first = 0, last = nchar(loop_liste[i+1])-1)
@@ -472,9 +485,9 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = input$models[i], marker = list(symbol = "square", size = 8))
     }
-    mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
-    
+    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
+    p
   })
   output$radarchart <- renderPlotly({radarchartplot()})
   output$radarchart_single <- renderPlotly({radarchartplot()})
@@ -786,8 +799,8 @@ server = function(input, output, session) {
   
   output$boxplot <- renderPlotly({boxplotplot()})
   
-  observeEvent(data(), {
-    available_models <- paste("Model", 1:(nrow(data()) / ncol(data())))
+  observeEvent(modelnames(), {
+    available_models <- modelnames()
     updatePickerInput(session, "models", choices = available_models, selected = available_models[1])
   })
 
