@@ -164,11 +164,11 @@ server = function(input, output, session) {
   output$classlimit <- renderUI({
     pickerInput(inputId = "classes",
                 choices = "",
-                options = pickerOptions(actionsBox = TRUE,
+                options = pickerOptions(actionsBox = FALSE,
                                         showTick = TRUE,
                                         size = 10,
                                         selectedTextFormat = "count > 3",
-                                        maxOptions = length(classnames()) -2),
+                                        maxOptions = length(classnames()) -3),
                 multiple = TRUE)   
   })
   
