@@ -530,7 +530,7 @@ server = function(input, output, session) {
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
-    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewählten Modell
+    cm_used_model <- selected_models() # 1 ist abhÃ¤ngig vom ausgewÃ¤hlten Modell
     
     id <- c(1:(2*no_classes))
     labels <- selected_classes()
@@ -549,7 +549,7 @@ server = function(input, output, session) {
     nodes$id <- as.numeric(nodes$id)
     nodes$weight <- as.numeric(nodes$weight)
     
-    # Einträge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     diag(cm_used_model) <- 0
     colnames(cm_used_model) <- c(1:no_classes)
     rownames(cm_used_model) <- c(1:no_classes)
