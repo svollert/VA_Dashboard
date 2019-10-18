@@ -801,7 +801,7 @@ server = function(input, output, session) {
   
   observeEvent(modelnames(), {
     available_models <- modelnames()
-    updatePickerInput(session, "models", choices = available_models, selected = available_models[1])
+    updatePickerInput(session, "models", choices = available_models, selected = available_models)
   })
 
   observeEvent(data(), {
