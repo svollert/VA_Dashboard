@@ -1,0 +1,9 @@
+Dangerousity
+small_potential
+small_used
+small_spatial
+small_imov
+large_potential
+large_used
+large_spatial
+large_imov
