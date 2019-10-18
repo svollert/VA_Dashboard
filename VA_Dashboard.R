@@ -646,16 +646,16 @@ server = function(input, output, session) {
     classes <- selected_classes()
     data <- as.data.frame(counts)
     data$names <- selected_classes()
-    colnames(data) <- c("Anzahl", "Klasse")
-    newdata <- data[order(data$Anzahl),]
-    summe <- cumsum(as.vector(newdata$Anzahl))
-    newdata$summe <- summe / length(input$models)
+    colnames(data) <- c("Count", "Class")
+    newdata <- data[order(data$Count),]
+    Sum <- cumsum(as.vector(newdata$Count))
+    newdata$Sum <- Sum / length(input$models)
     xform <- list(categoryorder = "array",
-                  categoryarray = newdata$summe)
+                  categoryarray = newdata$Sum)
     b <- list(
-      range = c(newdata$Klasse[1], newdata$Klasse[length(classes)])
+      range = c(newdata$Class[1], newdata$Class[length(classes)])
     )
-    p <- plot_ly(newdata, x = ~Klasse, y = ~summe, type = 'scatter', mode = "lines", name = "Value") %>% layout(xaxis = xform) %>%
+    p <- plot_ly(newdata, x = ~Class, y = ~Sum, type = 'scatter', mode = "lines", name = "Value") %>% layout(xaxis = xform) %>%
       add_trace(y = seq((sum(selected_models())/ncol(selected_models()))/length(input$models),sum(selected_models())/length(input$models), (sum(selected_models())/ncol(selected_models()))/length(input$models)), name = 'Uniform Distribution',mode = 'lines') %>%
       layout(xaxis = b)
     p
