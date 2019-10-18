@@ -52,7 +52,7 @@ ui = bs4DashPage(
                              bs4SidebarMenuItem("Confusion Matrix", tabName = "confusionmatrix", icon = "th-large"),
                              bs4SidebarMenuItem("Treemap", tabName = "treemap", icon = "columns"),
                              bs4SidebarHeader("Relations"),
-                             bs4SidebarMenuItem("Models and Classes", tabName = "modelsclasses", icon = "handshake"),
+                             #bs4SidebarMenuItem("Models and Classes", tabName = "modelsclasses", icon = "handshake"),
                              bs4SidebarMenuItem("debug", tabName = "debug"))),
   
   controlbar = bs4DashControlbar(skin = "light",
@@ -138,9 +138,9 @@ ui = bs4DashPage(
                                  bs4TabItem(tabName = "treemap",
                                             h2("Confusion Matrix"),
                                             fluidRow(bs4Card(title = "Treemap", d3tree2Output("treemap_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "modelsclasses",
-                                            h2("Relation between internal modelnames and actual modelnames"),
-                                            fluidRow(bs4Card(title = "Models", DT::dataTableOutput(outputId = "tablemodels")))),
+                                 #bs4TabItem(tabName = "modelsclasses",
+                                            #h2("Relation between internal modelnames and actual modelnames"),
+                                            #fluidRow(bs4Card(title = "Models", DT::dataTableOutput(outputId = "tablemodels")))),
                                  bs4TabItem(tabName = "debug",
                                             h2("debug"),
                                             fluidRow(bs4Card(title = "debug", textOutput("test")))))))
