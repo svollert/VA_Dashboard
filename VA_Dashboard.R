@@ -655,8 +655,8 @@ server = function(input, output, session) {
     b <- list(
       range = c(newdata$Klasse[1], newdata$Klasse[length(classes)])
     )
-    p <- plot_ly(newdata, x = ~Klasse, y = ~summe, type = 'scatter', mode = "lines", name = "Wert") %>% layout(xaxis = xform) %>%
-      add_trace(y = seq((sum(selected_models())/ncol(selected_models()))/length(input$models),sum(selected_models())/length(input$models), (sum(selected_models())/ncol(selected_models()))/length(input$models)), name = 'Gleichverteilung',mode = 'lines') %>%
+    p <- plot_ly(newdata, x = ~Klasse, y = ~summe, type = 'scatter', mode = "lines", name = "Value") %>% layout(xaxis = xform) %>%
+      add_trace(y = seq((sum(selected_models())/ncol(selected_models()))/length(input$models),sum(selected_models())/length(input$models), (sum(selected_models())/ncol(selected_models()))/length(input$models)), name = 'Uniform Distribution',mode = 'lines') %>%
       layout(xaxis = b)
     p
   })
@@ -670,8 +670,8 @@ server = function(input, output, session) {
     counts <- colSums(data) / length(input$models)
     classes <- selected_classes()
     p <- plot_ly() %>%
-      add_trace(y=counts, x=classes, type = "bar", name = "Wert") %>%
-      add_trace(x = classes, y = (sum(data)/ncol(data))/length(input$models), type = "scatter", mode = "lines", name = "Mittelwert")
+      add_trace(y=counts, x=classes, type = "bar", name = "Value") %>%
+      add_trace(x = classes, y = (sum(data)/ncol(data))/length(input$models), type = "scatter", mode = "lines", name = "Mean")
     p
   })
   output$histogram <- renderPlotly({histogramplot()})
