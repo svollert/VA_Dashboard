@@ -31,7 +31,20 @@ ui = bs4DashPage(
   title = "VA Project SS 19",
   navbar = bs4DashNavbar(skin = "light",
                          status = "white",
-                         border = TRUE),
+                         border = TRUE,
+                         rightUi = tagList(
+                           bs4DropdownMenu(
+                             show = FALSE,
+                             labelText = "!",
+                             status = "primary",
+                             bs4DropdownMenuItem(
+                               text = "You can collapse the sidebars"
+                             ),
+                             bs4DropdownMenuItem(
+                               text = "by clicking on the icons"
+                             )
+                           ))),
+  
   
   sidebar = bs4DashSidebar(skin = "light",
                            status = "primary",
