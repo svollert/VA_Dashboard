@@ -32,16 +32,14 @@ ui = bs4DashPage(
   navbar = bs4DashNavbar(skin = "light",
                          status = "white",
                          border = TRUE,
+                         fixed = TRUE,
                          rightUi = tagList(
                            bs4DropdownMenu(
                              show = FALSE,
                              labelText = "!",
                              status = "primary",
                              bs4DropdownMenuItem(
-                               text = "You can collapse the sidebars"
-                             ),
-                             bs4DropdownMenuItem(
-                               text = "by clicking on the icons"
+                               text = HTML("You can collapse the sidebars <br/> by clicking on the icons")
                              )
                            ))),
   
