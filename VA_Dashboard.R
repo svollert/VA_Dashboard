@@ -767,10 +767,7 @@ server = function(input, output, session) {
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
   
-  output$filedf <- renderTable({
-    if(is.null(data())){return ()}
-    input$file
-  })
+
   
   output$sum <- renderTable({
     if(is.null(data())){return ()}
@@ -783,34 +780,6 @@ server = function(input, output, session) {
     selected_models()
   }, filter = "top")
 
-  output$tablemodels <- DT::renderDataTable({
-    if(is.null(modelnames())){return ()}
-    used_names <- paste("Model", 1:ncol(data()))
-    models <- as.data.frame(cbind(used_names, modelnames()))
-    colnames(models) <- c("Internal Name", "Actual Name")
-    models
-  }, filter = "top")
-
-  
-
-
-  
-
-  
-  x <- reactive({
-    c(paste("Model ", 1:ncol(data())))
-  })
-  
-  reactive({
-    list2env(setNames(x,paste0("df",1:ncol(cm))),environment()) 
-  })
-  
-  output$tb <- renderUI({
-    if(is.null(data()))
-      h5("Powered by")
-    else
-      tabsetPanel(tabPanel("About File", tableOutput("filedf")), tabPanel("Data", tableOutput("table")))
-  })
 }
 
 shiny::shinyApp(ui, server)
