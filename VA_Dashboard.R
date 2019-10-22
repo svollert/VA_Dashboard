@@ -465,13 +465,25 @@ server = function(input, output, session) {
     new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
     new_data <- as.matrix(new_data)
     norm_data <- as.matrix(data)
-    max_diag <- max(diag(norm_data))
-    min_diag <- min(diag(norm_data))
-    diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag)) + 1.25
-    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)]))
-    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)]))
-    norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag)
-    norm_data[lower.tri(norm_data)] <- (norm_data[lower.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag)
+    max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
+    min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
+    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
+    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
+    if ((0.8*min_diag) > max_not_diag) {
+      diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
+      norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
+      norm_data[lower.tri(norm_data)] <- (norm_data[lower.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1 
+    } else {
+      if (max_diag >= max_not_diag) {
+        norm_data <- ((norm_data-min_diag)/(max_diag-min_diag))
+      } else {
+        if (min_diag <= min_not_diag) {
+          norm_data <- ((norm_data-min_diag)/(max_not_diag-min_diag))
+        } else {
+          norm_data <- ((norm_data-min_not_diag)/(max_not_diag-min_not_diag))        
+        }
+      }
+    }
     anno_x <- NULL
     anno_y <- NULL
     for (i in 1:(ncol(data))) {
