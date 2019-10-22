@@ -86,10 +86,11 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("baseline_box", width = 2),
                                                      bs4InfoBox(title="F1/Precision", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
-                                            fluidRow(bs4Card(title = "Distribution Plot", plotlyOutput("boxplot"), width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4TabCard(id = "Test123", title = "Parallel Coordinates  Line Plot", width = 12, closable = FALSE, status = "primary", maximizable = TRUE, 
-                                                                bs4TabPanel(tabName = "Parallel Coordinates", plotlyOutput("parcoord")),
-                                                                bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")))),
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Distribution and Error Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE, 
+                                                                bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot")),
+                                                                bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline"))),
+                                                     bs4Card(title = "Acc-Std Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Parallel Coordinates", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Sun Burst", plotlyOutput("sunburst_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "modelcomparison",
@@ -715,6 +716,7 @@ server = function(input, output, session) {
   output$errorline <- renderPlotly({errorlineplot()})
   
   boxplotplot <- reactive({
+    if(is.null(input$models)){return()}
     cm <- selected_models()
     cm_col <- vector(mode="numeric")
     for(i in seq(1, length(input$models))) {
@@ -768,6 +770,56 @@ server = function(input, output, session) {
   })
   
   output$boxplot <- renderPlotly({boxplotplot()})
+  
+  acc_std_plot <- reactive({
+    if(is.null(input$models)){return()}
+    data <- selected_models()
+    missclassified_data <- selected_models_missclassified()
+    chunk <- ncol(data)
+    n <- nrow(data)
+    r  <- rep(1:length(input$models),each=chunk)[1:n]
+    d <- split(data,r)
+    d_miss <- split(missclassified_data, r)
+    e <- c()
+    f <- c()
+    for(i in seq(1, length(d))){
+      e <- c(e, sum(unlist(d[i])))
+      f <- c(f, sum(unlist(d_miss[i])))
+    }
+    acc <- (e-f)/e
+    
+    cm <- selected_models()
+    cm_col <- vector(mode="numeric")
+    for(i in seq(1, length(input$models))) {
+      cm_col <- append(cm_col, colSums(cm[((i*ncol(cm))-(ncol(cm)-1)):(((i*ncol(cm))-(ncol(cm)-1))+(ncol(cm)-1)),]))
+    }
+    cm_row <- rowSums(cm)
+    precision <- cm/cm_col
+    results <- c()
+    for(i in seq(1,length(input$models))) {
+      vector_score <- vector(mode="numeric")
+      for(j in seq(1,ncol(cm))) {
+        vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
+      }
+      vector_score <- sd(vector_score)
+      results <- c(results, vector_score)
+    }
+    
+    x <- list(
+      title = "Standard deviation",
+      titlefont = f
+    )
+    y <- list(
+      title = "Accuracy",
+      titlefont = f
+    )
+    
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = "Set3")%>%
+      layout(xaxis = x, yaxis = y)
+    p
+  })
+  
+  output$acc_std_plot <- renderPlotly({acc_std_plot()})
   
   observeEvent(modelnames(), {
     available_models <- modelnames()
