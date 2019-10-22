@@ -32,7 +32,7 @@ ui = bs4DashPage(
   navbar = bs4DashNavbar(skin = "light",
                          status = "white",
                          border = TRUE,
-                         fixed = TRUE,
+                         fixed = FALSE,
                          rightUi = tagList(
                            bs4DropdownMenu(
                              show = FALSE,
@@ -50,20 +50,10 @@ ui = bs4DashPage(
                            brandColor = "primary",
                            bs4SidebarMenu(
                              bs4SidebarHeader("Dashboards"),
-                             bs4SidebarMenuItem("Model Comparison", tabName = "dashboard1", icon = "sliders"),
+                             bs4SidebarMenuItem("Model Overview", tabName = "dashboard1", icon = "sliders"),
                              bs4SidebarMenuItem("Model Details", tabName = "dashboard2", icon = "calculator"),
-                             bs4SidebarHeader("Tabular Data"),
-                             bs4SidebarMenuItem("Original Data", tabName = "originaldata", icon = "th"),
-                             bs4SidebarHeader("Singular Plots"),
-                             bs4SidebarMenuItem("Parallel Coordinates", tabName = "parallelcoordinates", icon = "align-justify"),
-                             bs4SidebarMenuItem("Radar Chart", tabName = "radarchart", icon = "clock"),
-                             bs4SidebarMenuItem("Sunburst Diagram", tabName = "sunburstdiagram", icon = "chart-pie"),
-                             bs4SidebarMenuItem("Sankey Diagram", tabName = "sankeydiagram", icon = "wrench"),
-                             bs4SidebarMenuItem("Confusion Wheel", tabName = "confusionwheel", icon = "snowflake"),
-                             bs4SidebarMenuItem("Confusion Matrix", tabName = "confusionmatrix", icon = "th-large"),
-                             bs4SidebarMenuItem("Treemap", tabName = "treemap", icon = "columns"),
-                             bs4SidebarHeader("Relations"),
-                             #bs4SidebarMenuItem("Models and Classes", tabName = "modelsclasses", icon = "handshake"),
+                             bs4SidebarMenuItem("Model Comparison", tabName = "modelcomparison", icon = "handshake"),
+                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "th-large"),
                              bs4SidebarMenuItem("debug", tabName = "debug"))),
   
   controlbar = bs4DashControlbar(skin = "light",
@@ -73,13 +63,11 @@ ui = bs4DashPage(
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
                                  h6(helpText("Choose the file")),
                                  fileInput("file", accept = c(".csv"), label = NULL, buttonLabel = "Search"),
-                                 #checkboxInput(inputId = "header", label = "Header", value = TRUE),
                                  h5(helpText("Upload model descriptions")),
                                  h6(helpText("Choose the seperator")),
                                  pickerInput(inputId = "sep2", label = NULL, choices = c(Newline = "\n", Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = "\n", multiple = FALSE),
                                  h6(helpText("Choose the file")),
                                  fileInput("modelnames", accept = c(".txt"), label = NULL, buttonLabel = "Search"),
-                                 #checkboxInput(inputId = "header2", label = "Header", value = FALSE),
                                  h5(helpText("Select the Models")),
                                  pickerInput(inputId = "models",
                                              label = NULL,
@@ -96,20 +84,16 @@ ui = bs4DashPage(
                                             h2("Comparison of different classification models"),
                                             fluidRow(bs4InfoBoxOutput("acc_box", width = 2),
                                                      bs4InfoBoxOutput("baseline_box", width = 2),
-                                                     bs4InfoBoxOutput("nomodels_box", width = 2),
-                                                     bs4InfoBoxOutput("samples_box", width = 2),
                                                      bs4InfoBox(title="F1/Precision", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
-                                            fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
-                                                     bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Distribution Plot", plotlyOutput("boxplot"), width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4TabCard(id = "Test123", title = "Parallel Coordinates  Line Plot", width = 12, closable = FALSE, status = "primary", maximizable = TRUE, 
                                                                 bs4TabPanel(tabName = "Parallel Coordinates", plotlyOutput("parcoord")),
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")))),
-                                            fluidRow(bs4TabCard(id = "radar", title = "Radar Chart", width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
-                                                                bs4TabPanel(tabName = "Absolut", plotlyOutput("radarchart")),
-                                                                bs4TabPanel(tabName = "Precision", "Test123")),
+                                            fluidRow(bs4Card(title = "Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Sun Burst", plotlyOutput("sunburst_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                 bs4TabItem(tabName = "modelcomparison",
+                                            h2("Test")),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
@@ -118,40 +102,18 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("recall_box", width = 2),
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
-                                            fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve2"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
-                                                     bs4Card(title = "Class Histogramm", plotlyOutput("histogram2"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Confusion Wheel", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Sankey Diagram",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
-                                 bs4TabItem(tabName = "originaldata",
-                                            h2("Tabular Visualization of the uploaded data"),
-                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE))),
-                                 bs4TabItem(tabName = "parallelcoordinates",
-                                            h2("Parallel Coordinates"),
-                                            fluidRow(bs4Card(title = "Parallel Coordinates", plotlyOutput("parcoord_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "radarchart",
-                                            h2("Radarchart"),
-                                            fluidRow(bs4Card(title = "Radarchart", plotlyOutput("radarchart_single", height = 700), width = 12, height = 800))),
-                                 bs4TabItem(tabName = "sunburstdiagram",
-                                            h2("Sunburst Diagram"),
-                                            fluidRow(bs4Card(title = "Sunburst Diagram", plotlyOutput("sunburst_plot_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "sankeydiagram",
-                                            h2("Sankey Diagram"),
-                                            fluidRow(bs4Card(title = "Sankey Diagram", plotlyOutput("sankey_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "confusionwheel",
-                                            h2("Confusion Wheel"),
-                                            fluidRow(bs4Card(title = "Confusion Wheel", chorddiagOutput("chorddiagramm_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "confusionmatrix",
-                                            h2("Confusion Matrix"),
-                                            fluidRow(bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap_single", height = 700),width = 12, height = 800))),
-                                 bs4TabItem(tabName = "treemap",
-                                            h2("Confusion Matrix"),
-                                            fluidRow(bs4Card(title = "Treemap", d3tree2Output("treemap_single", height = 700),width = 12, height = 800))),
-                                 #bs4TabItem(tabName = "modelsclasses",
-                                            #h2("Relation between internal modelnames and actual modelnames"),
-                                            #fluidRow(bs4Card(title = "Models", DT::dataTableOutput(outputId = "tablemodels")))),
+                                 bs4TabItem(tabName = "dataproperties",
+                                            h2("Data Properties"),
+                                            fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
+                                                     bs4InfoBoxOutput("samples_box", width = 2)),
+                                            fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
+                                                     bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
                                  bs4TabItem(tabName = "debug",
                                             h2("debug"),
                                             fluidRow(bs4Card(title = "debug", textOutput("test")))))))
@@ -161,7 +123,6 @@ server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
     if(is.null(file1)){return()}
-    #read.table(file=file1$datapath, sep = input$sep, header = input$header, stringsAsFactors = FALSE)
     read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
   })
   
@@ -172,8 +133,6 @@ server = function(input, output, session) {
       models <- paste("Model", 1:(nrow(data())/ncol(data())))
       return(models)
     }
-    #read.table(file=modelnames$datapath, sep = input$sep2, header = input$header2, stringsAsFactors = FALSE)
-    #models <- read.table(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
     models <- read.delim(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
     models <- unlist(models)
     models <- unname(models)
@@ -258,10 +217,6 @@ server = function(input, output, session) {
   
   
   output$test <- renderText({
-    #classdelete <- as.numeric(c(substring(input$classes, 6)))
-    #rep(classdelete, each = 10) + seq(0,99,10)
-    #options <- paste("Class", 1:10)
-    #colChoice <- match(input$classes,options)
     print(selected_models())
   })
   
@@ -474,7 +429,6 @@ server = function(input, output, session) {
     p
   })
   output$parcoord <- renderPlotly({parcoordplot()})
-  output$parcoord_single <- renderPlotly({parcoordplot()})
   
   
  #sums[(j-ncol(cm)+1):j] 
@@ -501,7 +455,6 @@ server = function(input, output, session) {
     p
   })
   output$radarchart <- renderPlotly({radarchartplot()})
-  output$radarchart_single <- renderPlotly({radarchartplot()})
   
   heatmapplot <- reactive({
     if(length(input$models) != 1){return()}
@@ -542,7 +495,6 @@ server = function(input, output, session) {
   })
   
   output$heatmap <- renderPlotly({heatmapplot()})
-  output$heatmap_single <- renderPlotly({heatmapplot()})
  
   
   chorddiagrammplot <- reactive({
@@ -554,7 +506,6 @@ server = function(input, output, session) {
     chorddiag(cm, type = "directional", showTicks = T, groupnameFontsize = 14, groupnamePadding = 30, margin = 90, palette = "Set3")
   })
   output$chorddiagramm <- renderChorddiag({chorddiagrammplot()})
-  output$chorddiagramm_single <- renderChorddiag({chorddiagrammplot()})
   
   
   
@@ -642,7 +593,6 @@ server = function(input, output, session) {
     p
   })
   output$sankey <- renderPlotly({sankeyplot()})
-  output$sankey_single <- renderPlotly({sankeyplot()})
   
   output$sunburst_data2 <- renderTable(sunburst_data())
   
@@ -672,7 +622,6 @@ server = function(input, output, session) {
     p
   })
   output$lorenzcurve <- renderPlotly({lorenzplot()})
-  output$lorenzcurve2 <- renderPlotly({lorenzplot()})
   
   
   
@@ -686,7 +635,6 @@ server = function(input, output, session) {
     p
   })
   output$histogram <- renderPlotly({histogramplot()})
-  output$histogram2 <- renderPlotly({histogramplot()})
   
   
   
@@ -729,7 +677,6 @@ server = function(input, output, session) {
     
   })
   output$treemap <- renderD3tree2({treemapplot()})
-  output$treemap_single <- renderD3tree2({treemapplot()})
   
 
   errorlineplot <- reactive({
