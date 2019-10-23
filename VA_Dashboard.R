@@ -23,6 +23,8 @@ library(treemap)
 library(d3treeR)
 library(rsconnect)
 library(igraph)
+library(dplyr)
+
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -78,7 +80,11 @@ ui = bs4DashPage(
                                                                      selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
                                  h5(helpText("Select the Classes which are not relevant")),
-                                 uiOutput("classlimit")),
+                                 uiOutput("classlimit"),
+                                 h5(helpText("Display absolute or percentage values?")),
+                                 switchInput("valueswitch", label = NULL, value = FALSE, onLabel = "Percentages",
+                                             offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
+                                             size = "large")),
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
                                             h2("Comparison of different classification models"),
@@ -117,7 +123,7 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
                                  bs4TabItem(tabName = "debug",
                                             h2("debug"),
-                                            fluidRow(bs4Card(title = "debug", textOutput("test")))))))
+                                            fluidRow(bs4Card(title = "debug", tableOutput("test")))))))
 
 
 server = function(input, output, session) {
@@ -164,10 +170,23 @@ server = function(input, output, session) {
     if(!is.null(input$classes)){
       delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
       data[-delseq, -classdelete()]
+      
     }
     else{
       data
     }
+  })
+  
+  selected_models_percentage <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models()
+    csum <- cm %>%
+      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+      summarise_each(list(sum))
+    csum <- csum[,-1]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    selected_models_percentage <- cm/csumdivide
+    selected_models_percentage
   })
   
   selected_models_missclassified <- reactive({
@@ -191,6 +210,29 @@ server = function(input, output, session) {
     }
   })
   
+  # Nur die wirklichen Prozente der Fehlklassifizierten
+  selected_models_missclassified_percentage <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models_percentage()
+    a <- c(1:nrow(cm))
+    b <- rep(1:ncol(cm), nrow(cm) / ncol(cm))
+    d <- cbind(a,b)
+    cm[d] <- 0.0
+    cm
+  })
+  
+  # Percentage der einzelnen Fehlklassifikationen summiert sich zu 1
+  selected_models_missclassified_percentage_per_class <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models_missclassified()
+    csum <- cm %>%
+      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+      summarise_each(list(sum))
+    csum <- csum[,-1]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    selected_models_missclassified_percentage_per_class <- cm/csumdivide
+    selected_models_missclassified_percentage_per_class
+  })
 #  classnames <- reactive({
 #    classnames <- input$classnames
 #    if(input$classnamesheader == FALSE){return()}
@@ -215,8 +257,8 @@ server = function(input, output, session) {
   })
   
   
-  output$test <- renderText({
-    print(selected_models())
+  output$test <- renderTable({
+    selected_models_missclassified_percentage_per_class()
   })
   
   samples <- reactive({
@@ -429,8 +471,8 @@ server = function(input, output, session) {
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     parcoord_data <- selected_models_missclassified()
+    #parcoord_data <- selected_models_missclassified_percentage()
     #models <- input$models
-    #models <- as.integer(substring(models, 7))
     models <- match(input$models,modelnames())
     classes <- selected_classes()
     #sums <- colSums(matrix(t(parcoord_data), nrow = ncol(parcoord_data)))
@@ -467,7 +509,6 @@ server = function(input, output, session) {
   output$parcoord <- renderPlotly({parcoordplot()})
   
   
- #sums[(j-ncol(cm)+1):j] 
   
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
@@ -798,7 +839,6 @@ server = function(input, output, session) {
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
       results <- rbind(results, df_model)
     }
-
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group")
     p
