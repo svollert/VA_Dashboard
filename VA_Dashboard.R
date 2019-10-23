@@ -157,11 +157,9 @@ server = function(input, output, session) {
     if(is.null(modelnames)){return()}
     options <- modelnames()
     rows <- match(input$models,options)
-    print(rows)
     rows <- as.numeric(rows) * ncol(data())
     rows <- c(rep(rows, each = ncol(data())) - 0:(ncol(data()) - 1))
     rows <- sort(rows)
-    print(rows)
     data <- data()[rows,]
     if(!is.null(input$classes)){
       delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
@@ -232,21 +230,59 @@ server = function(input, output, session) {
   sunburst_data <- reactive({
     if(is.null(data())){return()}
     sunburst_modelle <- selected_models_missclassified()
+    
+    # Labels festlegen
+    labels <- "All"
+    labels <- c(labels, input$models)
+    classes <- paste(rep(input$models, each=ncol(sunburst_modelle)), selected_classes())
+    labels <- c(labels, classes)
+    
+    # Eltern festlegen
     parents <- " "
-    labels1 <- "All"
-    parents <- c(parents, rep("All", nrow(sunburst_modelle) / ncol(sunburst_modelle)))
+    parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
     parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
-    labels1 <- c(labels1, input$models)
-    classes1 <- rep(input$models, each = ncol(sunburst_modelle))
-    classes2 <- paste(classes1, selected_classes())
-    labels2 <- c(labels1, classes2)
-    cm2=data.frame(matrix(ncol=0,nrow=ncol(sunburst_modelle)))
-    for(i in seq(1, nrow(sunburst_modelle), ncol(sunburst_modelle))){
-      cm2 <- cbind(cm2, sunburst_modelle[i:(i+ncol(sunburst_modelle)-1), ])
+    
+    # Hilfsvariable um über Klassennamen zu verfügen
+    vec_classes <- selected_classes()
+    
+    for (i in seq(1, length(input$models))) {
+      for (j in seq(1, ncol(sunburst_modelle))) {
+        for (k in seq(1, ncol(sunburst_modelle))) {
+          if (sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j] != 0) {
+            labels <- c(labels, paste(input$models[i], vec_classes[j], vec_classes[k]))
+            parents <- c(parents, paste(input$models[i], vec_classes[j]))
+          }
+        }        
+      }
     }
-    values <- c(sum(cm2),colSums(matrix(colSums(cm2), nrow = ncol(sunburst_modelle))), colSums(cm2))
-    sunburst_data <- as.data.frame(cbind(parents, labels2, values))
-    sunburst_data
+    
+    # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
+    values <- sum(sunburst_modelle)
+    # Schleife für Anzahl Fehlklassifizierungen je Modell
+    for (i in seq(1, length(input$models))) {
+      values <- c(values, sum(colSums(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), ])))
+    }
+
+    # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
+    for (i in seq(1, length(input$models))) {
+      for (j in seq(1, ncol(sunburst_modelle))) {
+        values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))     
+      }
+    }
+    
+    # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
+    for (i in seq(1, length(input$models))) {
+      for (j in seq(1, ncol(sunburst_modelle))) {
+        for (k in seq(1, ncol(sunburst_modelle))) {
+          if (sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j] != 0) {
+            values <- c(values, sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j])
+          }
+        }
+      }
+    }
+  
+    sunburst_data <- as.data.frame(cbind(parents, labels, values))
+    sunburst_data   
   })
   
 
@@ -375,7 +411,7 @@ server = function(input, output, session) {
   
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
-    p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844', '#2e4215', '#7a2b14', '#2f162a'))) #color = ~parents, colors = ~parents)
+    p <- plot_ly(sunburst_data(), labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844', '#2e4215', '#7a2b14', '#2f162a'))) #color = ~parents, colors = ~parents)
       #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
       #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
@@ -408,7 +444,6 @@ server = function(input, output, session) {
     colnames(parcoord_data) <- c("Models", classes)
     
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
-    print(input$models)
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
       text = sprintf("list(range = c(0,max_missclassified),label = '%s', values = ~`%s`),", classes[i], classes[i]) # Range entfernen um Balken zu skalieren
