@@ -23,6 +23,7 @@ library(treemap)
 library(d3treeR)
 library(rsconnect)
 library(igraph)
+library(data.table)
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -117,7 +118,7 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
                                  bs4TabItem(tabName = "debug",
                                             h2("debug"),
-                                            fluidRow(bs4Card(title = "debug", textOutput("test")))))))
+                                            fluidRow(bs4Card(title = "debug", tableOutput("test")))))))
 
 
 server = function(input, output, session) {
@@ -166,10 +167,21 @@ server = function(input, output, session) {
     if(!is.null(input$classes)){
       delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
       data[-delseq, -classdelete()]
+      
     }
     else{
       data
     }
+  })
+  
+  selected_models_percentage <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models()
+    csum <- setDT(cm)[, as.list(colSums(.SD)), by = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))]
+    csum <- csum[,-1]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    selected_models_percentage <- cm/csumdivide
+    selected_models_percentage
   })
   
   selected_models_missclassified <- reactive({
@@ -193,6 +205,16 @@ server = function(input, output, session) {
     }
   })
   
+  
+  selected_models_missclassified_percentage <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models_missclassified()
+    csum <- setDT(cm)[, as.list(colSums(.SD)), by = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))]
+    csum <- csum[,-1]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    selected_models_missclassified_percentage <- cm/csumdivide
+    selected_models_missclassified_percentage
+  })
 #  classnames <- reactive({
 #    classnames <- input$classnames
 #    if(input$classnamesheader == FALSE){return()}
@@ -217,8 +239,8 @@ server = function(input, output, session) {
   })
   
   
-  output$test <- renderText({
-    print(selected_models())
+  output$test <- renderTable({
+    selected_models_missclassified_percentage()
   })
   
   samples <- reactive({
