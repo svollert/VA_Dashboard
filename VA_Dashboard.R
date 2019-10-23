@@ -23,7 +23,8 @@ library(treemap)
 library(d3treeR)
 library(rsconnect)
 library(igraph)
-library(data.table)
+library(dplyr)
+
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -177,7 +178,9 @@ server = function(input, output, session) {
   selected_models_percentage <- reactive({
     if(is.null(modelnames)){return()}
     cm <- selected_models()
-    csum <- setDT(cm)[, as.list(colSums(.SD)), by = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))]
+    csum <- cm %>%
+      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+      summarise_each(list(sum))
     csum <- csum[,-1]
     csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
     selected_models_percentage <- cm/csumdivide
@@ -208,12 +211,19 @@ server = function(input, output, session) {
   
   selected_models_missclassified_percentage <- reactive({
     if(is.null(modelnames)){return()}
-    cm <- selected_models_missclassified()
-    csum <- setDT(cm)[, as.list(colSums(.SD)), by = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))]
-    csum <- csum[,-1]
-    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
-    selected_models_missclassified_percentage <- cm/csumdivide
-    selected_models_missclassified_percentage
+    cm <- selected_models_percentage()
+    a <- c(1:nrow(cm))
+    b <- rep(1:ncol(cm), nrow(cm) / ncol(cm))
+    d <- cbind(a,b)
+    cm[d] <- 0.0
+    cm
+    #csum <- cm %>%
+      #group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+      #summarise_each(list(sum))
+    #csum <- csum[,-1]
+    #csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    #selected_models_missclassified_percentage <- cm/csumdivide
+    #selected_models_missclassified_percentage
   })
 #  classnames <- reactive({
 #    classnames <- input$classnames
@@ -415,8 +425,8 @@ server = function(input, output, session) {
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     parcoord_data <- selected_models_missclassified()
+    #parcoord_data <- selected_models_missclassified_percentage()
     #models <- input$models
-    #models <- as.integer(substring(models, 7))
     models <- match(input$models,modelnames())
     classes <- selected_classes()
     #sums <- colSums(matrix(t(parcoord_data), nrow = ncol(parcoord_data)))
@@ -430,7 +440,6 @@ server = function(input, output, session) {
     colnames(parcoord_data) <- c("Models", classes)
     
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
-    print(input$models)
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
       text = sprintf("list(range = c(0,max_missclassified),label = '%s', values = ~`%s`),", classes[i], classes[i]) # Range entfernen um Balken zu skalieren
@@ -454,7 +463,6 @@ server = function(input, output, session) {
   output$parcoord <- renderPlotly({parcoordplot()})
   
   
- #sums[(j-ncol(cm)+1):j] 
   
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
@@ -785,7 +793,6 @@ server = function(input, output, session) {
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
       results <- rbind(results, df_model)
     }
-
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group")
     p
