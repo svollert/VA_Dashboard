@@ -212,7 +212,7 @@ server = function(input, output, session) {
     }
   })
   
-  
+  # Nur die wirklichen Prozente der Fehlklassifizierten
   selected_models_missclassified_percentage <- reactive({
     if(is.null(modelnames)){return()}
     cm <- selected_models_percentage()
@@ -221,13 +221,19 @@ server = function(input, output, session) {
     d <- cbind(a,b)
     cm[d] <- 0.0
     cm
-    #csum <- cm %>%
-      #group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
-      #summarise_each(list(sum))
-    #csum <- csum[,-1]
-    #csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
-    #selected_models_missclassified_percentage <- cm/csumdivide
-    #selected_models_missclassified_percentage
+  })
+  
+  # Percentage der einzelnen Fehlklassifikationen summiert sich zu 1
+  selected_models_missclassified_percentage_per_class <- reactive({
+    if(is.null(modelnames)){return()}
+    cm <- selected_models_missclassified()
+    csum <- cm %>%
+      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+      summarise_each(list(sum))
+    csum <- csum[,-1]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    selected_models_missclassified_percentage_per_class <- cm/csumdivide
+    selected_models_missclassified_percentage_per_class
   })
 #  classnames <- reactive({
 #    classnames <- input$classnames
@@ -254,7 +260,7 @@ server = function(input, output, session) {
   
   
   output$test <- renderTable({
-    selected_models_missclassified_percentage()
+    selected_models_missclassified_percentage_per_class()
   })
   
   samples <- reactive({
