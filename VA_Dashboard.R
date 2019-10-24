@@ -187,6 +187,7 @@ server = function(input, output, session) {
       summarise_each(list(sum))
     csum <- csum[,-1]
     csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    csumdivide[csumdivide == 0] <- 1
     selected_models_percentage <- cm/csumdivide
     selected_models_percentage
   })
@@ -232,6 +233,7 @@ server = function(input, output, session) {
       summarise_each(list(sum))
     csum <- csum[,-1]
     csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    csumdivide[csumdivide == 0] <- 1
     selected_models_missclassified_percentage_per_class <- cm/csumdivide
     selected_models_missclassified_percentage_per_class
   })
@@ -273,22 +275,29 @@ server = function(input, output, session) {
   
   sunburst_data <- reactive({
     if(is.null(data())){return()}
-    sunburst_modelle <- selected_models_missclassified()
+    
+    if (input$valueswitch == TRUE) {
+      # Prozent
+      sunburst_modelle <- selected_models_missclassified_percentage()
+    } else {
+      # Absolut
+      sunburst_modelle <- selected_models_missclassified()
+    }
     
     # Labels festlegen
     labels <- "All"
     labels <- c(labels, input$models)
     classes <- paste(rep(input$models, each=ncol(sunburst_modelle)), selected_classes())
     labels <- c(labels, classes)
-    
+
     # Eltern festlegen
     parents <- " "
     parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
     parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
-    
+
     # Hilfsvariable um über Klassennamen zu verfügen
     vec_classes <- selected_classes()
-    
+
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         for (k in seq(1, ncol(sunburst_modelle))) {
@@ -296,10 +305,10 @@ server = function(input, output, session) {
             labels <- c(labels, paste(input$models[i], vec_classes[j], vec_classes[k]))
             parents <- c(parents, paste(input$models[i], vec_classes[j]))
           }
-        }        
+        }
       }
     }
-    
+
     # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
     values <- sum(sunburst_modelle)
     # Schleife für Anzahl Fehlklassifizierungen je Modell
@@ -310,10 +319,10 @@ server = function(input, output, session) {
     # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
-        values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))     
+        values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))
       }
     }
-    
+
     # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
@@ -324,9 +333,9 @@ server = function(input, output, session) {
         }
       }
     }
-  
+    
     sunburst_data <- as.data.frame(cbind(parents, labels, values))
-    sunburst_data   
+    sunburst_data
   })
   
 
