@@ -472,8 +472,10 @@ server = function(input, output, session) {
 
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
-    parcoord_data <- selected_models_missclassified()
-    #parcoord_data <- selected_models_missclassified_percentage()
+    if(input$valueswitch == TRUE){
+      parcoord_data <- selected_models_missclassified_percentage()}
+    else{
+      parcoord_data <- selected_models_missclassified()}
     #models <- input$models
     models <- match(input$models,modelnames())
     classes <- selected_classes()
@@ -514,7 +516,10 @@ server = function(input, output, session) {
   
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
-    cm <- selected_models_missclassified()
+    if(input$valueswitch == TRUE){
+      cm <- selected_models_missclassified_percentage()}
+    else{
+      cm <- selected_models_missclassified()}
     models <- input$models
     classes <- selected_classes()
     cm2=data.frame(matrix(ncol=0,nrow=ncol(cm)))
@@ -537,7 +542,10 @@ server = function(input, output, session) {
   
   heatmapplot <- reactive({
     if(length(input$models) != 1){return()}
-    data <- selected_models()
+    if(input$valueswitch == TRUE){
+      data <- round(selected_models_percentage(),3)}
+    else{
+      data <- selected_models()}
     classes <- selected_classes()
     rownames(data) <- classes
     colnames(data) <- rev(classes)
@@ -590,7 +598,10 @@ server = function(input, output, session) {
   
   chorddiagrammplot <- reactive({
     if(length(input$models) != 1){return()}
-    cm <- selected_models_missclassified()
+    if(input$valueswitch == TRUE){
+      cm <- selected_models_missclassified_percentage()}
+    else{
+      cm <- selected_models_missclassified()}
     cm <- t(as.matrix(cm))
     rownames(cm) <- selected_classes()
     colnames(cm) <- rownames(cm)
@@ -731,7 +742,10 @@ server = function(input, output, session) {
   
   treemapplot <- reactive({
     if(length(input$models) != 1){return()}
-    data <- selected_models_missclassified()
+    if(input$valueswitch == TRUE){
+      data <- selected_models_missclassified_percentage()}
+    else{
+      data <- selected_models_missclassified()}
     classes <- selected_classes()
     rownames(data) <- classes
     colnames(data) <- classes
