@@ -102,7 +102,17 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Sun Burst", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "modelcomparison",
-                                            h2("Test")),
+                                            fluidRow(bs4Card(title = "Select Default Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                                             pickerInput(inputId = "defaultmodel",
+                                                                         label = NULL,
+                                                                         choices = "",
+                                                                         multiple = FALSE)),
+                                                     bs4Card(title = "Select Comparing Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                                             pickerInput(inputId = "comparingmodel",
+                                                                         label = NULL,
+                                                                         choices = "",
+                                                                         multiple = FALSE)),
+                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table") ,width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE))),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
@@ -246,6 +256,24 @@ server = function(input, output, session) {
 #    }
 #  })
   
+  comparisondata <- reactive({
+  if(is.null(data())){return ()}
+  options <- modelnames()
+  rows_d <- match(input$defaultmodel, options)
+  start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
+  end <- rows_d*ncol(selected_models())
+  rows_d <- seq(start, end)
+  rows_c <- match(input$comparingmodel, options)
+  start <- (rows_c*ncol(selected_models())) - (ncol(selected_models())) + 1
+  end <- rows_c*ncol(selected_models())
+  rows_c <- seq(start, end)
+  data_d <- selected_models()[rows_d,]
+  data_c <- selected_models()[rows_c,]
+  data <- rbind(data_d, data_c)
+  data
+  })
+  
+  
   classnames <- reactive({
     classnames <- colnames(data())
     })
@@ -271,7 +299,7 @@ server = function(input, output, session) {
     samples
   })
   
-
+  
   
   sunburst_data <- reactive({
     if(is.null(data())){return()}
@@ -925,6 +953,16 @@ server = function(input, output, session) {
     available_models <- modelnames()
     updatePickerInput(session, "models", choices = available_models, selected = available_models)
   })
+  
+  observeEvent(modelnames(), {
+    available_models <- modelnames()
+    updatePickerInput(session, "defaultmodel", choices = available_models, selected = available_models[1])
+  })
+  
+  observeEvent(modelnames(), {
+    available_models <- modelnames()
+    updatePickerInput(session, "comparingmodel", choices = available_models, selected = available_models[2])
+  })
 
   observeEvent(data(), {
     available_classes <- classnames()
@@ -936,6 +974,11 @@ server = function(input, output, session) {
   output$sum <- renderTable({
     if(is.null(data())){return ()}
     summary(data())
+  })
+  
+  output$model_comparison_table <- DT::renderDataTable({
+    if(is.null(data())){return ()}
+    comparisondata()
   })
   
   output$table <- DT::renderDataTable({
