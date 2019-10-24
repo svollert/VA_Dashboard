@@ -112,7 +112,8 @@ ui = bs4DashPage(
                                                                          label = NULL,
                                                                          choices = "",
                                                                          multiple = FALSE)),
-                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table") ,width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE))),
+                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table") ,width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
+                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
@@ -257,11 +258,11 @@ server = function(input, output, session) {
   comparisondata <- reactive({
   if(is.null(data())){return ()}
   options <- modelnames()
-  rows_d <- match(input$defaultmodel, options)
+  rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
   start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
   end <- rows_d*ncol(selected_models())
   rows_d <- seq(start, end)
-  rows_c <- match(input$comparingmodel, options)
+  rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
   start <- (rows_c*ncol(selected_models())) - (ncol(selected_models())) + 1
   end <- rows_c*ncol(selected_models())
   rows_c <- seq(start, end)
