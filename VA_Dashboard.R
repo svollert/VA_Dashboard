@@ -112,8 +112,9 @@ ui = bs4DashPage(
                                                                          label = NULL,
                                                                          choices = "",
                                                                          multiple = FALSE)),
-                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table") ,width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
-                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table"), width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
+                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
+                                                     bs4Card(title = "Radarchart Comparison", plotlyOutput("radarchartdeltaplot"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
@@ -567,7 +568,36 @@ server = function(input, output, session) {
     #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
     p
   })
+  
   output$radarchart <- renderPlotly({radarchartplot()})
+  
+  radarchartdeltaplot <- reactive({
+    if(is.null(input$models)){return()}
+    cm <- comparisondata()
+    diag1 <- 1:(2*ncol(cm))
+    diag2<- rep(1:ncol(cm),2)
+    diagonal <- cbind(diag1, diag2)
+    cm[diagonal] <- 0
+    models <- input$models
+    classes <- selected_classes()
+    cm2=data.frame(matrix(ncol=0,nrow=ncol(cm)))
+    for(i in seq(1, nrow(cm), ncol(cm))){
+      cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
+    }
+    sums <- colSums(cm2)
+    p <- plot_ly(type = 'scatterpolar', mode = "lines")
+    i = 0
+    for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
+      i = i+1
+      k = j+1
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = input$models[i], marker = list(symbol = "square", size = 8))
+    }
+    mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines+markers", theta = c(classes, classes[1]), fill = "toself", name = "AVG", marker = list(symbol = "square", size = 1))
+    p
+  })
+  
+  output$radarchartdeltaplot <- renderPlotly({radarchartdeltaplot()})
   
   heatmapplot <- reactive({
     if(length(input$models) != 1){return()}
