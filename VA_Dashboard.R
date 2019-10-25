@@ -624,7 +624,12 @@ server = function(input, output, session) {
   
   radarchartdeltaplot <- reactive({
     if(is.null(input$models)){return()}
-    cm <- comparisondata()
+    if(input$valueswitch == TRUE){
+      cm <- comparisondata_percentage()
+    }
+    else{
+      cm <- comparisondata()
+    }
     diag1 <- 1:(2*ncol(cm))
     diag2<- rep(1:ncol(cm),2)
     diagonal <- cbind(diag1, diag2)
@@ -727,6 +732,7 @@ server = function(input, output, session) {
     rownames(norm_data) <- classes
     colnames(norm_data) <- rev(classes)
     norm_data <- as.matrix(norm_data)
+    norm_data <- round(norm_data, 3)
     abs_norm_data <- data.frame(lapply(norm_data, as.character), stringsAsFactors=FALSE)
     abs_norm_data <- as.matrix(abs_norm_data)
     
@@ -735,6 +741,7 @@ server = function(input, output, session) {
     norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
     norm_data[norm_data < 0] <- ((norm_data[norm_data <0 ])/min_element)*(-1)
     
+    
     anno_x <- NULL
     anno_y <- NULL
     for (i in 1:(ncol(data))) {
@@ -742,14 +749,12 @@ server = function(input, output, session) {
         anno_x <- append(anno_x, classes[i])
       }
     }
-    print(anno_x)
     
     for (i in 1:(ncol(data))) {
       for (j in 1:(ncol(data))) {
         anno_y <- append(anno_y, classes[j])
       }
     }
-    print(anno_y)
     
     # Farbskala
     col <- brewer.pal(n = 11, name = 'RdBu')
