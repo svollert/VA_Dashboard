@@ -23,6 +23,7 @@ library(treemap)
 library(d3treeR)
 library(rsconnect)
 library(igraph)
+library(BBmisc)
 library(dplyr)
 
 
@@ -113,7 +114,7 @@ ui = bs4DashPage(
                                                                          choices = "",
                                                                          multiple = FALSE)),
                                                      bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table"), width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
-                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
+                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Radarchart Comparison", plotlyOutput("radarchartdeltaplot"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
@@ -275,6 +276,48 @@ server = function(input, output, session) {
   data
   })
   
+  comparisondata_percentage <- reactive({
+    if(is.null(data())){return ()}
+    options <- modelnames()
+    rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
+    start <- (rows_d*ncol(selected_models_percentage())) - (ncol(selected_models_percentage())) + 1
+    end <- rows_d*ncol(selected_models_percentage())
+    rows_d <- seq(start, end)
+    rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
+    start <- (rows_c*ncol(selected_models_percentage())) - (ncol(selected_models_percentage())) + 1
+    end <- rows_c*ncol(selected_models_percentage())
+    rows_c <- seq(start, end)
+    data_d <- selected_models_percentage()[rows_d,]
+    data_c <- selected_models_percentage()[rows_c,]
+    data <- rbind(data_d, data_c)
+    data
+  })
+  
+  
+  classnames <- reactive({
+    classnames <- colnames(data())
+  })
+  
+  selected_classes <- reactive({
+    selected_classes <- colnames(selected_models())
+    selected_classes
+  })
+  
+  classdelete <- reactive({
+    options <- classnames()
+    colChoice <- match(input$classes,options)
+  })
+  
+  
+  output$test <- renderTable({
+    selected_models_missclassified_percentage_per_class()
+  })
+  
+  samples <- reactive({
+    if(is.null(input$models)){return(0)}
+    samples <- as.integer(sum(selected_models()) / length(input$models))
+    samples
+  })
   
   classnames <- reactive({
     classnames <- colnames(data())
@@ -663,6 +706,78 @@ server = function(input, output, session) {
   
   output$heatmap <- renderPlotly({heatmapplot()})
  
+  heatmapplot_comparison <- reactive({
+    if(is.null(input$models)) {return()}
+    
+    if(input$valueswitch == TRUE) {
+      data <- round(comparisondata_percentage(),3)
+    } else {
+      data <- comparisondata()
+    }
+    
+    classes <- selected_classes()
+    #classes_row <- c(classes, classes)
+    #rownames(data) <- classes_row
+    #colnames(data) <- rev(classes)
+    new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
+    new_data <- as.matrix(new_data)
+    data_def <- as.matrix(data[1:ncol(data),])
+    data_comp <- as.matrix(data[(ncol(data)+1):(2*ncol(data)),])
+    #norm_data <- as.matrix(data)
+    # data_def <- as.matrix(norm_data[norm_data[1:ncol(data),]])
+    # data_comp <- as.matrix(norm_data[norm_data[(ncol(data)+1):(2*ncol(data)),]])
+    norm_data <- data_def - data_comp
+    abs_norm_data <- norm_data
+    rownames(norm_data) <- classes
+    colnames(norm_data) <- classes
+    
+    max_element <- max(norm_data)
+    min_element <- min(norm_data)
+    norm_data <- BBmisc::normalize(norm_data, method = "range", range = c(-1, 1), margin = 1L, on.constant = "quiet")
+    #norm_data <- ((norm_data-min_element)/(max_element-min_element))
+    
+    #max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
+    #min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
+    #max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
+    #min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
+    #if ((0.8*min_diag) > max_not_diag) {
+    #   diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
+    #   norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
+    #   norm_data[lower.tri(norm_data)] <- (norm_data[lower.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1 
+    # } else {
+    #   if (max_diag >= max_not_diag) {
+    #     norm_data <- ((norm_data-min_diag)/(max_diag-min_diag))
+    #   } else {
+    #     if (min_diag <= min_not_diag) {
+    #       norm_data <- ((norm_data-min_diag)/(max_not_diag-min_diag))
+    #     } else {
+    #       norm_data <- ((norm_data-min_not_diag)/(max_not_diag-min_not_diag))        
+    #     }
+    #   }
+    # }
+    anno_x <- NULL
+    anno_y <- NULL
+    for (i in 1:(ncol(data))) {
+      for (j in 1:(ncol(data))) {
+        anno_x <- append(anno_x, classes[i])
+      }
+    }
+    
+    for (i in 1:(ncol(data))) {
+      for (j in 1:(ncol(data))) {
+        anno_y <- append(anno_y, classes[j])
+      }
+    }
+    
+    # Farbskala
+    col <- brewer.pal(n = 9, name = 'Blues')
+    
+    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col) %>%
+      add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
+    p    
+  })
+  
+  output$heatmap_comparison <- renderPlotly({heatmapplot_comparison()})
   
   chorddiagrammplot <- reactive({
     if(length(input$models) != 1){return()}
