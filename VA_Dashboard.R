@@ -587,7 +587,7 @@ server = function(input, output, session) {
     diag2<- rep(1:ncol(cm),2)
     diagonal <- cbind(diag1, diag2)
     cm[diagonal] <- 0
-    models <- input$models
+    models <- c(input$defaultmodel, input$comparingmodel)
     classes <- selected_classes()
     cm2=data.frame(matrix(ncol=0,nrow=ncol(cm)))
     for(i in seq(1, nrow(cm), ncol(cm))){
@@ -599,10 +599,10 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = input$models[i], marker = list(symbol = "square", size = 8))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
     mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines+markers", theta = c(classes, classes[1]), fill = "toself", name = "AVG", marker = list(symbol = "square", size = 1))
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
   
