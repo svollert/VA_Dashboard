@@ -26,7 +26,6 @@ library(igraph)
 library(BBmisc)
 library(dplyr)
 
-
 ui = bs4DashPage(
   old_school = FALSE,
   sidebar_collapsed = FALSE,
@@ -716,45 +715,26 @@ server = function(input, output, session) {
     }
     
     classes <- selected_classes()
-    #classes_row <- c(classes, classes)
-    #rownames(data) <- classes_row
-    #colnames(data) <- rev(classes)
-    new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
-    new_data <- as.matrix(new_data)
-    data_def <- as.matrix(data[1:ncol(data),])
-    data_comp <- as.matrix(data[(ncol(data)+1):(2*ncol(data)),])
-    #norm_data <- as.matrix(data)
-    # data_def <- as.matrix(norm_data[norm_data[1:ncol(data),]])
-    # data_comp <- as.matrix(norm_data[norm_data[(ncol(data)+1):(2*ncol(data)),]])
+    rownames(data) <- c(classes, paste(classes, classes))
+    colnames(data) <- rev(classes)
+    #new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
+    #new_data <- as.matrix(new_data)
+    norm_data <- as.matrix(data)
+    data_def <- as.matrix(norm_data[1:ncol(data),])
+    data_comp <- as.matrix(norm_data[(ncol(data)+1):(2*ncol(data)),])
     norm_data <- data_def - data_comp
-    abs_norm_data <- norm_data
+    norm_data <- as.data.frame(norm_data)
     rownames(norm_data) <- classes
-    colnames(norm_data) <- classes
+    colnames(norm_data) <- rev(classes)
+    norm_data <- as.matrix(norm_data)
+    abs_norm_data <- data.frame(lapply(norm_data, as.character), stringsAsFactors=FALSE)
+    abs_norm_data <- as.matrix(abs_norm_data)
     
     max_element <- max(norm_data)
     min_element <- min(norm_data)
-    norm_data <- BBmisc::normalize(norm_data, method = "range", range = c(-1, 1), margin = 1L, on.constant = "quiet")
-    #norm_data <- ((norm_data-min_element)/(max_element-min_element))
+    norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
+    norm_data[norm_data < 0] <- ((norm_data[norm_data <0 ])/min_element)*(-1)
     
-    #max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
-    #min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
-    #max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
-    #min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
-    #if ((0.8*min_diag) > max_not_diag) {
-    #   diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
-    #   norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
-    #   norm_data[lower.tri(norm_data)] <- (norm_data[lower.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1 
-    # } else {
-    #   if (max_diag >= max_not_diag) {
-    #     norm_data <- ((norm_data-min_diag)/(max_diag-min_diag))
-    #   } else {
-    #     if (min_diag <= min_not_diag) {
-    #       norm_data <- ((norm_data-min_diag)/(max_not_diag-min_diag))
-    #     } else {
-    #       norm_data <- ((norm_data-min_not_diag)/(max_not_diag-min_not_diag))        
-    #     }
-    #   }
-    # }
     anno_x <- NULL
     anno_y <- NULL
     for (i in 1:(ncol(data))) {
@@ -762,15 +742,17 @@ server = function(input, output, session) {
         anno_x <- append(anno_x, classes[i])
       }
     }
+    print(anno_x)
     
     for (i in 1:(ncol(data))) {
       for (j in 1:(ncol(data))) {
         anno_y <- append(anno_y, classes[j])
       }
     }
+    print(anno_y)
     
     # Farbskala
-    col <- brewer.pal(n = 9, name = 'Blues')
+    col <- brewer.pal(n = 11, name = 'RdBu')
     
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col) %>%
       add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
