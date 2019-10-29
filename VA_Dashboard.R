@@ -653,7 +653,7 @@ server = function(input, output, session) {
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    mittel <- colSums(mittel)/length(input$models)
+    mittel <- round(colSums(mittel)/length(input$models),0)
     p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
