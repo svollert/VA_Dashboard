@@ -94,15 +94,17 @@ ui = bs4DashPage(
                                                      bs4InfoBox(title="Recall", width = 2, status = "primary"),
                                                      bs4InfoBox(title="F1-Score", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
-                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Distribution and Error Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE, 
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Distribution and Error Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
-                                                                bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline"))),
+                                                                bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
+                                                                bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
+                                                                                                   <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
                                                      bs4Card(title = "Acc-Std Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Parallel Coordinates", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Sun Burst", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "modelcomparison",
-                                            fluidRow(bs4Card(title = "Select Default Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                            fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
                                                                          label = NULL,
                                                                          choices = "",
@@ -626,9 +628,11 @@ server = function(input, output, session) {
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
       cm <- comparisondata_percentage()
+      mittel <- selected_models_missclassified_percentage()
     }
     else{
       cm <- comparisondata()
+      mittel <- selected_models_missclassified()
     }
     diag1 <- 1:(2*ncol(cm))
     diag2<- rep(1:ncol(cm),2)
@@ -648,7 +652,8 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
-    mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    mittel <- colSums(mittel)/length(input$models)
     p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
@@ -1026,7 +1031,7 @@ server = function(input, output, session) {
       results <- rbind(results, df_model)
     }
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
-      layout(boxmode = "group")
+      layout(boxmode = "group", yaxis = list(title = "Score over all classes"))
     p
   })
   
@@ -1067,11 +1072,11 @@ server = function(input, output, session) {
     }
     
     x <- list(
-      title = "Standard deviation",
+      title = "Standard deviation of per-class errors",
       titlefont = f
     )
     y <- list(
-      title = "Accuracy",
+      title = "Overall Accuracy",
       titlefont = f
     )
     
