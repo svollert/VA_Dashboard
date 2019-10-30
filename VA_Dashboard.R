@@ -777,7 +777,7 @@ server = function(input, output, session) {
     # Farbskala
     col <- brewer.pal(n = 9, name = 'Blues')
     
-    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col) %>%
+    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black'))
     p
   })
