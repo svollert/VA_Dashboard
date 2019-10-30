@@ -98,12 +98,12 @@ ui = bs4DashPage(
                                                                 bs4TabPanel(tabName = "Per-model Metrics Plot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Errorline Plot", plotlyOutput("errorline"))),
                                                      bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Class Error Parallel Coordinates", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Class and Model Query View", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Class Error Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Network Graph", plotlyOutput("network_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "modelcomparison",
-                                            fluidRow(bs4Card(title = "Select Default Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                            fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
                                                                          label = NULL,
                                                                          choices = "",
@@ -128,7 +128,7 @@ ui = bs4DashPage(
                                             fluidRow(bs4Card(title = "Confusion Circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
                                                      bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Bilateral Confusion Plot",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Confusion Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                     bs4Card(title = "Confusion Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE)))
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
@@ -368,7 +368,7 @@ server = function(input, output, session) {
     parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
     parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
 
-    # Hilfsvariable um über Klassennamen zu verfügen
+    # Hilfsvariable um Ã¼ber Klassennamen zu verfÃ¼gen
     vec_classes <- selected_classes()
 
     for (i in seq(1, length(input$models))) {
@@ -382,21 +382,21 @@ server = function(input, output, session) {
       }
     }
 
-    # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
+    # Schleife fÃ¼r Anzahl Fehlklassifizierungen Ã¼ber alle Modelle
     values <- sum(sunburst_modelle)
-    # Schleife für Anzahl Fehlklassifizierungen je Modell
+    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Modell
     for (i in seq(1, length(input$models))) {
       values <- c(values, sum(colSums(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), ])))
     }
 
-    # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
+    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Modell und Klasse
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))
       }
     }
 
-    # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
+    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Classconfusion
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         for (k in seq(1, ncol(sunburst_modelle))) {
@@ -599,7 +599,7 @@ server = function(input, output, session) {
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
-      cm <- selected_models_missclassified_percentage()}
+      cm <- round(selected_models_missclassified_percentage(),4)}
     else{
       cm <- selected_models_missclassified()}
     models <- input$models
@@ -627,9 +627,11 @@ server = function(input, output, session) {
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
       cm <- comparisondata_percentage()
+      mittel <- selected_models_missclassified_percentage()
     }
     else{
       cm <- comparisondata()
+      mittel <- selected_models_missclassified()
     }
     diag1 <- 1:(2*ncol(cm))
     diag2<- rep(1:ncol(cm),2)
@@ -641,7 +643,7 @@ server = function(input, output, session) {
     for(i in seq(1, nrow(cm), ncol(cm))){
       cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
     }
-    sums <- colSums(cm2)
+    sums <- round(colSums(cm2),4)
     p <- plot_ly(type = 'scatterpolar', mode = "lines")
     i = 0
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
@@ -649,7 +651,13 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
-    mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
+    if(input$valueswitch == FALSE){
+      mittel <- round(colSums(mittel)/length(input$models),0)
+    }
+    else{
+      mittel <- round(colSums(mittel)/length(input$models),4)
+    }
     p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
@@ -670,8 +678,8 @@ server = function(input, output, session) {
     norm_data <- as.matrix(data)
     max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
     min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
-    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
-    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
+    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert auÃŸerhalb der Diagonalen
+    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert auÃŸerhalb der Diagonalen
     if ((0.8*min_diag) > max_not_diag) {
       diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
       norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
@@ -880,7 +888,7 @@ server = function(input, output, session) {
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
-    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewÃ¤hlten Modell
+    cm_used_model <- selected_models() # 1 ist abhÃ¤ngig vom ausgewÃƒÂ¤hlten Modell
     
     id <- c(1:(2*no_classes))
     labels <- selected_classes()
@@ -899,7 +907,7 @@ server = function(input, output, session) {
     nodes$id <- as.numeric(nodes$id)
     nodes$weight <- as.numeric(nodes$weight)
     
-    # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     diag(cm_used_model) <- 0
     colnames(cm_used_model) <- c(1:no_classes)
     rownames(cm_used_model) <- c(1:no_classes)
@@ -977,7 +985,7 @@ server = function(input, output, session) {
     # col <- distinctColorPalette(no_classes, altCol=T)
     # col <- append(col, col)
     # 
-    # # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     # colnames(cm) <- c(1:no_classes)
     # rownames(cm_used_model) <- c(1:no_classes)
     # cm_used_model <- data.matrix(cm_used_model)
@@ -1156,7 +1164,7 @@ server = function(input, output, session) {
       results <- rbind(results, df_model)
     }
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
-      layout(boxmode = "group")
+      layout(boxmode = "group", yaxis = list(title = "Score over all classes"))
     p
   })
   
@@ -1192,16 +1200,16 @@ server = function(input, output, session) {
       for(j in seq(1,ncol(cm))) {
         vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
       }
-      vector_score <- sd(vector_score)
+      vector_score <- 1- sd(vector_score)
       results <- c(results, vector_score)
     }
     
     x <- list(
-      title = "Standard deviation",
+      title = "1 - Standard deviation of per-class errors",
       titlefont = f
     )
     y <- list(
-      title = "Accuracy",
+      title = "Overall Accuracy",
       titlefont = f
     )
     
