@@ -1072,12 +1072,12 @@ server = function(input, output, session) {
       for(j in seq(1,ncol(cm))) {
         vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
       }
-      vector_score <- sd(vector_score)
+      vector_score <- 1- sd(vector_score)
       results <- c(results, vector_score)
     }
     
     x <- list(
-      title = "Standard deviation of per-class errors",
+      title = "1 - Standard deviation of per-class errors",
       titlefont = f
     )
     y <- list(
