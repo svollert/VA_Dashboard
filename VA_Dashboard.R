@@ -679,7 +679,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = input$models[i], marker = list(symbol = "square", size = 8))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = input$models[i], marker = list(symbol = "square", size = 8), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
@@ -714,7 +714,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     if(input$valueswitch == FALSE){
@@ -723,7 +723,7 @@ server = function(input, output, session) {
     else{
       mittel <- round(colSums(mittel)/length(input$models),4)
     }
-    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     p
   })
   
