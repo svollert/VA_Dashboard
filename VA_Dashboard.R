@@ -132,7 +132,8 @@ ui = bs4DashPage(
                                                                dropdownItem(name = HTML("<br>")),
                                                                dropdownItem(name = "You can hover over the panel"),
                                                                dropdownItem(name = "to show detailed information")
-                                                             )))),
+                                                             ))),
+                                            fluidRow(bs4Card(title = "Network Graph", plotlyOutput("network_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
 
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
