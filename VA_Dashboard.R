@@ -620,9 +620,11 @@ server = function(input, output, session) {
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
-      parcoord_data <- selected_models_missclassified_percentage()}
+      parcoord_data <- selected_models_missclassified_percentage()
+      axisformat <- '.3f'}
     else{
-      parcoord_data <- selected_models_missclassified()}
+      parcoord_data <- selected_models_missclassified()
+      axisformat <- 'f'}
     #models <- input$models
     models <- match(input$models,modelnames())
     classes <- selected_classes()
@@ -639,7 +641,7 @@ server = function(input, output, session) {
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
-      text = sprintf("list(range = c(0,max_missclassified),label = '%s', values = ~`%s`),", classes[i], classes[i]) # Range entfernen um Balken zu skalieren
+      text = sprintf("list(range = c(0,max_missclassified),tickformat = '%s', label = '%s', values = ~`%s`),",axisformat, classes[i], classes[i]) # Range entfernen um Balken zu skalieren
       loop_liste = c(loop_liste, text)
       if(i == ncol(selected_models_missclassified())){
         loop_liste[i+1] = substring(loop_liste[i+1], first = 0, last = nchar(loop_liste[i+1])-1)
