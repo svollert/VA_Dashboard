@@ -88,11 +88,11 @@ ui = bs4DashPage(
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
                                             h2("Comparison of different classification models"),
-                                            fluidRow(bs4InfoBoxOutput("acc_box", width = 2),
-                                                     bs4InfoBoxOutput("baseline_box", width = 2),
-                                                     bs4InfoBox(title="Precision", width = 2, status = "primary"),
-                                                     bs4InfoBox(title="Recall", width = 2, status = "primary"),
-                                                     bs4InfoBox(title="F1-Score", width = 2, status = "primary"),
+                                            fluidRow(bs4InfoBoxOutput("acc_box_all", width = 2),
+                                                     bs4InfoBoxOutput("baseline_box_all", width = 2),
+                                                     bs4InfoBoxOutput("precision_box_all", width = 2),
+                                                     bs4InfoBoxOutput("recall_box_all", width = 2),
+                                                     bs4InfoBoxOutput("f1_box_all", width = 2),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
 
                                             fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
@@ -153,9 +153,9 @@ ui = bs4DashPage(
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
                                                      bs4InfoBoxOutput("singlebaseacc_box", width = 2),
-                                                     bs4InfoBoxOutput("precision_box", width = 2),
-                                                     bs4InfoBoxOutput("recall_box", width = 2),
-                                                     bs4InfoBoxOutput("f1_box", width = 2),
+                                                     bs4InfoBoxOutput("precision_box_single", width = 2),
+                                                     bs4InfoBoxOutput("recall_box_single", width = 2),
+                                                     bs4InfoBoxOutput("f1_box_single", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
 
@@ -398,8 +398,6 @@ server = function(input, output, session) {
     samples
   })
   
-  
-  
   sunburst_data <- reactive({
     if(is.null(data())){return()}
     
@@ -476,7 +474,7 @@ server = function(input, output, session) {
     )
   })
   
-  output$acc_box <- renderbs4InfoBox({
+  output$acc_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
       title = "Average Accuracy",
       0,
@@ -491,7 +489,7 @@ server = function(input, output, session) {
     )
   })
   
-  output$baseline_box <- renderbs4InfoBox({
+  output$baseline_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
       title = "Baseline Accuracy",
       0,
@@ -501,6 +499,117 @@ server = function(input, output, session) {
     bs4InfoBox(
       title = "Baseline Accuracy",
       round(max(colSums(selected_models())) / sum(selected_models()),4),
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  kpi_precision <- reactive({
+    results <- boxplot_calculation()
+    cm <- selected_models()
+    results <- round(mean(results[1:nrow(cm),1]),4)
+    results
+  })
+  
+  kpi_recall <- reactive({
+    results <- boxplot_calculation()
+    cm <- selected_models()
+    results <- round(mean(results[(1+nrow(cm)):(2*nrow(cm)),1]),4)
+    results
+  })
+  
+  kpi_f1 <- reactive({
+    results <- boxplot_calculation()
+    cm <- selected_models()
+    results <- round(mean(results[(1+2*nrow(cm)):(3*nrow(cm)),1]),4)
+    results
+  })
+  
+  output$precision_box_all <- renderbs4InfoBox({
+    if(is.null(input$models)){return(bs4InfoBox(
+      title = "Average Precision",
+      0,
+      icon = "credit-card",
+      status = "primary"
+    ))}
+    bs4InfoBox(
+      title = "Average Precision",
+      kpi_precision(),
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$precision_box_single <- renderbs4InfoBox({
+    if(length(input$models) != 1){return(bs4InfoBox(
+      title = "Model Precision",
+      0,
+      icon = "credit-card",
+      status = "primary"      
+    ))}
+    bs4InfoBox(
+      title = "Model Precision",
+      kpi_precision(),
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$recall_box_all <- renderbs4InfoBox({
+    if(is.null(input$models)){return(bs4InfoBox(
+      title = "Average Recall",
+      0,
+      icon = "credit-card",
+      status = "primary"
+    ))}
+    bs4InfoBox(
+      title = "Average Recall",
+      kpi_recall(),
+      icon = "credit-card",
+      status = "primary"
+    )  
+  })
+  
+  output$recall_box_single <- renderbs4InfoBox({
+    if(length(input$models) != 1){return(bs4InfoBox(
+      title = "Model Recall",
+      0,
+      icon = "credit-card",
+      status = "primary"      
+    ))}
+    bs4InfoBox(
+      title = "Model Recall",
+      kpi_recall(),
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$f1_box_all <- renderbs4InfoBox({
+    if(is.null(input$models)){return(bs4InfoBox(
+      title = "Average F1",
+      0,
+      icon = "credit-card",
+      status = "primary"
+    ))}
+    bs4InfoBox(
+      title = "Average F1",
+      kpi_f1(),
+      icon = "credit-card",
+      status = "primary"
+    )  
+  })
+  
+  output$f1_box_single <- renderbs4InfoBox({
+    if(length(input$models) != 1){return(bs4InfoBox(
+      title = "Model F1-Score",
+      0,
+      icon = "credit-card",
+      status = "primary"      
+    ))}
+    bs4InfoBox(
+      title = "Model F1-Score",
+      kpi_f1(),
       icon = "credit-card",
       status = "primary"
     )
@@ -557,7 +666,7 @@ server = function(input, output, session) {
       if (length(input$models) != 1) {
         0
       } else {
-      round(((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()) - (rowSums(selected_models()) / sum(selected_models())) * (colSums(selected_models()) / sum(selected_models()))) / (1- (rowSums(selected_models()) / sum(selected_models())) * (colSums(selected_models()) / sum(selected_models()))),4)},
+      round((((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())) - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))) / (1 - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))), 4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -1169,7 +1278,7 @@ server = function(input, output, session) {
   })
   output$errorline <- renderPlotly({errorlineplot()})
   
-  boxplotplot <- reactive({
+  boxplot_calculation <- reactive({
     if(is.null(input$models)){return()}
     cm <- selected_models()
     cm_col <- vector(mode="numeric")
@@ -1177,8 +1286,8 @@ server = function(input, output, session) {
       cm_col <- append(cm_col, colSums(cm[((i*ncol(cm))-(ncol(cm)-1)):(((i*ncol(cm))-(ncol(cm)-1))+(ncol(cm)-1)),]))
     }
     cm_row <- rowSums(cm)
-    precision <- cm/cm_col
-    recall <- cm/cm_row
+    precision <- cm/cm_row
+    recall <- cm/cm_col
     f1 <- 2 * ((precision * recall) / (precision+recall))
     results <- data.frame(Score = numeric(), Model = numeric(), Metric = character(), stringsAsFactors = FALSE)
     for(i in seq(1,length(input$models))) {
@@ -1190,6 +1299,7 @@ server = function(input, output, session) {
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "Precision")
       }
+      vector_score[is.nan(vector_score)] <- 0
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
       results <- rbind(results, df_model)
     }
@@ -1202,6 +1312,7 @@ server = function(input, output, session) {
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "Recall")
       }
+      vector_score[is.nan(vector_score)] <- 0
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
       results <- rbind(results, df_model)
     }
@@ -1214,9 +1325,16 @@ server = function(input, output, session) {
         vector_model <- append(vector_model, as.character(input$models[i]))
         vector_metric <- append(vector_metric, "F1")
       }
+      vector_score[is.nan(vector_score)] <- 0
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
       results <- rbind(results, df_model)
     }
+    results
+  })
+  
+  boxplotplot <- reactive({
+    if(is.null(input$models)){return()}
+    results <- boxplot_calculation()
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group", yaxis = list(title = "Score over all classes"))
     p
@@ -1242,12 +1360,8 @@ server = function(input, output, session) {
     acc <- (e-f)/e
     
     cm <- selected_models()
-    cm_col <- vector(mode="numeric")
-    for(i in seq(1, length(input$models))) {
-      cm_col <- append(cm_col, colSums(cm[((i*ncol(cm))-(ncol(cm)-1)):(((i*ncol(cm))-(ncol(cm)-1))+(ncol(cm)-1)),]))
-    }
     cm_row <- rowSums(cm)
-    precision <- cm/cm_col
+    precision <- cm/cm_row
     results <- c()
     for(i in seq(1,length(input$models))) {
       vector_score <- vector(mode="numeric")
