@@ -1278,7 +1278,7 @@ server = function(input, output, session) {
       titlefont = f
     )
     
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = "Set3")%>%
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = "Set3", marker = list(size = 12))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
