@@ -94,15 +94,15 @@ ui = bs4DashPage(
                                                      bs4InfoBox(title="Recall", width = 2, status = "primary"),
                                                      bs4InfoBox(title="F1-Score", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
-                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Distribution and Error Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model metrics", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
                                                                                                    <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
-                                                     bs4Card(title = "Acc-Std Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Parallel Coordinates", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Sun Burst", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                     bs4Card(title = "Model similarity", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Class and model query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Class error radar chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
+                                                     bs4Card(title = "Error hierarchy", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
@@ -126,10 +126,10 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Confusion Wheel", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Sankey Diagram",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                            fluidRow(bs4Card(title = "Confusion circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
+                                                     bs4Card(title = "Confusion matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Bilateral confusions",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
+                                                     bs4Card(title = "Confusion tree map", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
@@ -600,7 +600,7 @@ server = function(input, output, session) {
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
-      cm <- selected_models_missclassified_percentage()}
+      cm <- round(selected_models_missclassified_percentage(),4)}
     else{
       cm <- selected_models_missclassified()}
     models <- input$models
@@ -644,7 +644,7 @@ server = function(input, output, session) {
     for(i in seq(1, nrow(cm), ncol(cm))){
       cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
     }
-    sums <- colSums(cm2)
+    sums <- round(colSums(cm2),4)
     p <- plot_ly(type = 'scatterpolar', mode = "lines")
     i = 0
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
@@ -653,7 +653,12 @@ server = function(input, output, session) {
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    mittel <- round(colSums(mittel)/length(input$models),0)
+    if(input$valueswitch == FALSE){
+      mittel <- round(colSums(mittel)/length(input$models),0)
+    }
+    else{
+      mittel <- round(colSums(mittel)/length(input$models),4)
+    }
     p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
@@ -1067,12 +1072,12 @@ server = function(input, output, session) {
       for(j in seq(1,ncol(cm))) {
         vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
       }
-      vector_score <- sd(vector_score)
+      vector_score <- 1- sd(vector_score)
       results <- c(results, vector_score)
     }
     
     x <- list(
-      title = "Standard deviation of per-class errors",
+      title = "1 - Standard deviation of per-class errors",
       titlefont = f
     )
     y <- list(
