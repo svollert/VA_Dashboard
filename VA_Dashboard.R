@@ -600,7 +600,7 @@ server = function(input, output, session) {
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
-      cm <- selected_models_missclassified_percentage()}
+      cm <- round(selected_models_missclassified_percentage(),4)}
     else{
       cm <- selected_models_missclassified()}
     models <- input$models
@@ -644,7 +644,7 @@ server = function(input, output, session) {
     for(i in seq(1, nrow(cm), ncol(cm))){
       cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
     }
-    sums <- colSums(cm2)
+    sums <- round(colSums(cm2),4)
     p <- plot_ly(type = 'scatterpolar', mode = "lines")
     i = 0
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
@@ -653,7 +653,12 @@ server = function(input, output, session) {
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    mittel <- round(colSums(mittel)/length(input$models),0)
+    if(input$valueswitch == FALSE){
+      mittel <- round(colSums(mittel)/length(input$models),0)
+    }
+    else{
+      mittel <- round(colSums(mittel)/length(input$models),4)
+    }
     p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average")
     p
   })
