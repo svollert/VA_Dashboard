@@ -99,10 +99,39 @@ ui = bs4DashPage(
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
                                                                                                    <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
-                                                     bs4Card(title = "Model similarity", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Class and model query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Class error radar chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Error hierarchy", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                     bs4Card(title = "Model similarity", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can hover over the points"),
+                                                               dropdownItem(name = "to show detailed information")
+                                                             ))),
+                                            fluidRow(bs4Card(title = "Class and model query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can highlight aspects by"),
+                                                               dropdownItem(name = "using a brush stroke on the axis")
+                                                             ))),
+                                            fluidRow(bs4Card(title = "Class error radar chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can hover over the rectangles"),
+                                                               dropdownItem(name = "to show detailed information"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "You can resize the radar by"),
+                                                               dropdownItem(name = "clicking and dragging with the mouse"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "You can select/deselect models"),
+                                                               dropdownItem(name = "by clicking on them")
+                                                             )),
+                                                     bs4Card(title = "Error hierarchy", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can drill down/up by"),
+                                                               dropdownItem(name = "clicking on the panels"),
+                                                               dropdownItem(name = HTML("<br>")),
+                                                               dropdownItem(name = "You can hover over the panel"),
+                                                               dropdownItem(name = "to show detailed information")
+                                                             )))),
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
@@ -126,10 +155,29 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Confusion circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
+                                            fluidRow(bs4Card(title = "Confusion circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can hover over the connections"),
+                                                               dropdownDivider(),
+                                                               dropdownItem(name = "to show detailed information")
+                                                             )),
                                                      bs4Card(title = "Confusion matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Bilateral confusions",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Confusion tree map", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                            fluidRow(bs4Card(title = "Bilateral confusions",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can hover over the connections"),
+                                                               dropdownItem(name = "to show detailed information"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "You can hover over the classes"),
+                                                               dropdownItem(name = "to show summarized information")
+                                                             )),
+                                                     bs4Card(title = "Confusion tree map", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "You can click on a tile"),
+                                                               dropdownItem(name = "to show detailed information")
+                                                             )))),
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
