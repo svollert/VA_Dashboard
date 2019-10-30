@@ -920,7 +920,7 @@ server = function(input, output, session) {
     col <- c(col_red, col_white, col_green)
     
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", 
-                 colors = col, zauto = F, zmin = -1, zmax = 1) %>%
+                 colors = col, zauto = F, zmin = -1, zmax = 1, hovertemplate = paste('<i>True Value </i>: %{x}', '<br><i>Pred. Value </i>: %{y}', '<br><i>Comp. Index </i>: %{z:.3f}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
     p    
   })
