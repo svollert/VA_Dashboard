@@ -95,24 +95,24 @@ ui = bs4DashPage(
                                                      bs4InfoBox(title="F1-Score", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
 
-                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 8, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
                                                                                                    <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
-                                                     bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the points"),
                                                                dropdownItem(name = "to show detailed information")
                                                              ))),
-                                            fluidRow(bs4Card(title = "Class and Model Query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
+                                            fluidRow(bs4Card(title = "Class and Model Query view", plotlyOutput("parcoord"), width = 8, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can highlight aspects by"),
                                                                dropdownItem(name = "using a brush stroke on the axis")
-                                                             ))),
-                                            fluidRow(bs4Card(title = "Class Error Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             )),
+                                                     bs4Card(title = "Class Error Radar Chart", plotlyOutput("radarchart"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the rectangles"),
@@ -123,8 +123,8 @@ ui = bs4DashPage(
                                                                dropdownItem(name = HTML("<hr>")),
                                                                dropdownItem(name = "You can select/deselect models"),
                                                                dropdownItem(name = "by clicking on them")
-                                                             )),
-                                                     bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             ))),
+                                            fluidRow(bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can drill down/up by"),
@@ -132,8 +132,8 @@ ui = bs4DashPage(
                                                                dropdownItem(name = HTML("<br>")),
                                                                dropdownItem(name = "You can hover over the panel"),
                                                                dropdownItem(name = "to show detailed information")
-                                                             ))),
-                                            fluidRow(bs4Card(title = "Network Graph", plotlyOutput("network_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                             )),
+                                                     bs4Card(title = "Network Graph", plotlyOutput("network_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
 
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
