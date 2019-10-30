@@ -1176,7 +1176,8 @@ server = function(input, output, session) {
     models <- input$models
     p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy") %>%
       add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline") %>%
-      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random")
+      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random") %>%
+      layout(xaxis = list(tickvals = models, tickmode = "array"))
   })
   output$errorline <- renderPlotly({errorlineplot()})
   
@@ -1229,7 +1230,7 @@ server = function(input, output, session) {
       results <- rbind(results, df_model)
     }
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
-      layout(boxmode = "group", yaxis = list(title = "Score over all classes"))
+      layout(boxmode = "group", yaxis = list(title = "Score over all classes"), xaxis = list(tickvals = input$models, tickmode = "array"))
     p
   })
   
