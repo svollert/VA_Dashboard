@@ -48,7 +48,7 @@ ui = bs4DashPage(
   
   sidebar = bs4DashSidebar(skin = "light",
                            status = "primary",
-                           title = "VA Project",
+                           title = "ML-ModelExplorer",
                            brandColor = "primary",
                            bs4SidebarMenu(
                              bs4SidebarHeader("Dashboards"),
@@ -94,24 +94,25 @@ ui = bs4DashPage(
                                                      bs4InfoBox(title="Recall", width = 2, status = "primary"),
                                                      bs4InfoBox(title="F1-Score", width = 2, status = "primary"),
                                                      bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
-                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model metrics", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
+
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 9, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
                                                                                                    <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
-                                                     bs4Card(title = "Model similarity", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 3, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the points"),
                                                                dropdownItem(name = "to show detailed information")
                                                              ))),
-                                            fluidRow(bs4Card(title = "Class and model query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
+                                            fluidRow(bs4Card(title = "Class and Model Query view", plotlyOutput("parcoord"), width = 12, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can highlight aspects by"),
                                                                dropdownItem(name = "using a brush stroke on the axis")
                                                              ))),
-                                            fluidRow(bs4Card(title = "Class error radar chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                            fluidRow(bs4Card(title = "Class Error Radar Chart", plotlyOutput("radarchart"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the rectangles"),
@@ -123,7 +124,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can select/deselect models"),
                                                                dropdownItem(name = "by clicking on them")
                                                              )),
-                                                     bs4Card(title = "Error hierarchy", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can drill down/up by"),
@@ -132,6 +133,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the panel"),
                                                                dropdownItem(name = "to show detailed information")
                                                              )))),
+
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
@@ -144,8 +146,8 @@ ui = bs4DashPage(
                                                                          choices = "",
                                                                          multiple = FALSE)),
                                                      bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table"), width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
-                                            fluidRow(bs4Card(title = "Confusion Matrix Comparison", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
-                                                     bs4Card(title = "Radarchart Comparison", plotlyOutput("radarchartdeltaplot"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                            fluidRow(bs4Card(title = "Delta Confusion Matrix", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
+                                                     bs4Card(title = "Delta Error Radar Chart", plotlyOutput("radarchartdeltaplot"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE))),
                                  bs4TabItem(tabName = "dashboard2",
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
@@ -155,15 +157,16 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Confusion circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
+
+                                            fluidRow(bs4Card(title = "Confusion Circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the connections"),
                                                                dropdownDivider(),
                                                                dropdownItem(name = "to show detailed information")
                                                              )),
-                                                     bs4Card(title = "Confusion matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Bilateral confusions",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Bilateral Confusion Plot",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can hover over the connections"),
@@ -172,12 +175,13 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the classes"),
                                                                dropdownItem(name = "to show summarized information")
                                                              )),
-                                                     bs4Card(title = "Confusion tree map", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Confusion Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can click on a tile"),
                                                                dropdownItem(name = "to show detailed information")
                                                              )))),
+
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
@@ -417,7 +421,7 @@ server = function(input, output, session) {
     parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
     parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
 
-    # Hilfsvariable um �ber Klassennamen zu verf�gen
+    # Hilfsvariable um über Klassennamen zu verfügen
     vec_classes <- selected_classes()
 
     for (i in seq(1, length(input$models))) {
@@ -431,21 +435,21 @@ server = function(input, output, session) {
       }
     }
 
-    # Schleife f�r Anzahl Fehlklassifizierungen �ber alle Modelle
+    # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
     values <- sum(sunburst_modelle)
-    # Schleife f�r Anzahl Fehlklassifizierungen je Modell
+    # Schleife für Anzahl Fehlklassifizierungen je Modell
     for (i in seq(1, length(input$models))) {
       values <- c(values, sum(colSums(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), ])))
     }
 
-    # Schleife f�r Anzahl Fehlklassifizierungen je Modell und Klasse
+    # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))
       }
     }
 
-    # Schleife f�r Anzahl Fehlklassifizierungen je Classconfusion
+    # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         for (k in seq(1, ncol(sunburst_modelle))) {
@@ -727,8 +731,8 @@ server = function(input, output, session) {
     norm_data <- as.matrix(data)
     max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
     min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
-    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert au�erhalb der Diagonalen
-    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert au�erhalb der Diagonalen
+    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
+    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
     if ((0.8*min_diag) > max_not_diag) {
       diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
       norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
@@ -768,6 +772,76 @@ server = function(input, output, session) {
   
   output$heatmap <- renderPlotly({heatmapplot()})
  
+  # heatmapplot_comparison <- reactive({
+  #   if(is.null(input$models)) {return()}
+  #   
+  #   if(input$valueswitch == TRUE) {
+  #     data <- round(comparisondata_percentage(),3)
+  #   } else {
+  #     data <- comparisondata()
+  #   }
+  #   
+  #   classes <- selected_classes()
+  #   rownames(data) <- c(classes, paste(classes, classes))
+  #   colnames(data) <- rev(classes)
+  #   #new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
+  #   #new_data <- as.matrix(new_data)
+  #   norm_data <- as.matrix(data)
+  #   data_def <- as.matrix(norm_data[1:ncol(data),])
+  #   data_comp <- as.matrix(norm_data[(ncol(data)+1):(2*ncol(data)),])
+  #   norm_data <- data_def - data_comp
+  #   norm_data <- as.data.frame(norm_data)
+  #   rownames(norm_data) <- classes
+  #   colnames(norm_data) <- rev(classes)
+  #   norm_data <- as.matrix(norm_data)
+  #   norm_data <- round(norm_data, 3)
+  #   abs_norm_data <- data.frame(lapply(norm_data, as.character), stringsAsFactors=FALSE)
+  #   abs_norm_data <- as.matrix(abs_norm_data)
+  #   
+  #   max_element <- max(norm_data)
+  #   min_element <- min(norm_data)
+  #   if (min(norm_data) < 0) {
+  #     if (abs(max_element) >= abs(min_element)) {
+  #       min_element = max_element * (-1)
+  #     } else {
+  #       max_element = min_element * (-1)
+  #     }
+  #     norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
+  #     norm_data[norm_data < 0] <- ((norm_data[norm_data < 0])/min_element)*(-1)      
+  #   } else {
+  #     norm_data <- (norm_data - min_element)/(max_element - min_element)
+  #   }
+  #   
+  #   anno_x <- NULL
+  #   anno_y <- NULL
+  #   for (i in 1:(ncol(data))) {
+  #     for (j in 1:(ncol(data))) {
+  #       anno_x <- append(anno_x, classes[i])
+  #     }
+  #   }
+  #   
+  #   for (i in 1:(ncol(data))) {
+  #     for (j in 1:(ncol(data))) {
+  #       anno_y <- append(anno_y, classes[j])
+  #     }
+  #   }
+  #   
+  #   # Farbskala
+  #   
+  #   col_red <- rev(brewer.pal(n = 9, name = 'Reds'))
+  #   col_red <- col_red[-(7:9)]
+  #   col_white <- "#FFFFFF"
+  #   col_green <- brewer.pal(n = 9, name = 'Greens')
+  #   col_green <- col_green[-(1:3)]
+  #   col <- c(col_red, col_white, col_green)
+  #   print(col)
+  #   
+  #   p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", 
+  #   colors = col, zauto = F, zmin = -1, zmax = 1) %>%
+  #     add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
+  #   p    
+  # })
+  
   heatmapplot_comparison <- reactive({
     if(is.null(input$models)) {return()}
     
@@ -796,9 +870,19 @@ server = function(input, output, session) {
     
     max_element <- max(norm_data)
     min_element <- min(norm_data)
-    norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
-    norm_data[norm_data < 0] <- ((norm_data[norm_data <0 ])/min_element)*(-1)
+    if (min(norm_data) < 0) {
+      if (abs(max_element) >= abs(min_element)) {
+        min_element = max_element * (-1)
+      } else {
+        max_element = min_element * (-1)
+      }
+      norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
+      norm_data[norm_data < 0] <- ((norm_data[norm_data < 0])/min_element)*(-1)      
+    } else {
+      norm_data <- (norm_data - min_element)/(max_element - min_element)
+    }
     
+    diag(norm_data) <- diag(norm_data) * (-1)
     
     anno_x <- NULL
     anno_y <- NULL
@@ -815,12 +899,21 @@ server = function(input, output, session) {
     }
     
     # Farbskala
-    col <- brewer.pal(n = 11, name = 'RdBu')
     
-    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col) %>%
+    col_red <- rev(brewer.pal(n = 9, name = 'Reds'))
+    col_red <- col_red[-(7:9)]
+    col_white <- "#FFFFFF"
+    col_green <- brewer.pal(n = 9, name = 'Greens')
+    col_green <- col_green[-(1:3)]
+    col <- c(col_red, col_white, col_green)
+    
+    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", 
+                 colors = col, zauto = F, zmin = -1, zmax = 1) %>%
       add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
     p    
   })
+  
+  
   
   output$heatmap_comparison <- renderPlotly({heatmapplot_comparison()})
   
@@ -848,7 +941,7 @@ server = function(input, output, session) {
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
-    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewählten Modell
+    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewÃ¤hlten Modell
     
     id <- c(1:(2*no_classes))
     labels <- selected_classes()
@@ -867,7 +960,7 @@ server = function(input, output, session) {
     nodes$id <- as.numeric(nodes$id)
     nodes$weight <- as.numeric(nodes$weight)
     
-    # Einträge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     diag(cm_used_model) <- 0
     colnames(cm_used_model) <- c(1:no_classes)
     rownames(cm_used_model) <- c(1:no_classes)
@@ -923,6 +1016,46 @@ server = function(input, output, session) {
     p
   })
   output$sankey <- renderPlotly({sankeyplot()})
+  
+  networkplot <- reactive({
+    return()
+    # cm <- selected_models_missclassified()
+    # 
+    # # Anzahl Klassen aus Konfusionsmatrix ermitteln
+    # no_classes <- ncol(cm)
+    # # Anzahl Modelle aus Konfusionsmatrix ermitteln
+    # no_models <- length(input$models)
+    # 
+    # # Nodes
+    # class_labels <- selected_classes()
+    # class_totals_missclassified <- colSums(cm)
+    # nodes <- as.data.frame(cbind(class_labels, cm_totals_missclassified), stringsAsFactors = FALSE)
+    # colnames(nodes) <- c("label","weight")
+    # rownames(nodes) <- c(1:no_classes)
+    # nodes$weight <- as.numeric(nodes$weight)
+    # 
+    # # Farben
+    # col <- distinctColorPalette(no_classes, altCol=T)
+    # col <- append(col, col)
+    # 
+    # # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # colnames(cm) <- c(1:no_classes)
+    # rownames(cm_used_model) <- c(1:no_classes)
+    # cm_used_model <- data.matrix(cm_used_model)
+    # 
+    # # Gewichtete Kanten erstellen
+    # g <- graph.adjacency(cm_used_model, weighted=TRUE)
+    # edges <- get.data.frame(g)
+    # colnames(edges) <- c("to","from","weight")
+    # edges$to <- as.numeric(edges$to) + (ncol(selected_models_missclassified()) -1)
+    # edges$from <- as.numeric(edges$from) - 1
+    # edges <- transform(edges, color = col[from +1])
+    # edges <- edges[c("from", "to", "weight", "color")]
+    # edges <- transform(edges, label = paste("Class", to - (ncol(selected_models_missclassified()) -1)))
+    # #edges <- edges[order(edges$from),]   # Sortierung bringt nichts in Darstellung
+  })
+  
+  output$network_plot <- renderPlotly({networkplot()})
   
   output$sunburst_data2 <- renderTable(sunburst_data())
   
