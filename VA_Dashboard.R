@@ -25,6 +25,7 @@ library(rsconnect)
 library(igraph)
 library(BBmisc)
 library(dplyr)
+library(DescTools)
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -82,7 +83,7 @@ ui = bs4DashPage(
                                  h5(helpText("Select the Classes which are not relevant")),
                                  uiOutput("classlimit"),
                                  h5(helpText("Display absolute or percentage values?")),
-                                 switchInput("valueswitch", label = NULL, value = FALSE, onLabel = "Percentages",
+                                 switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
                                              size = "large")),
   footer = bs4DashFooter(),
@@ -93,7 +94,7 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("precision_box_all", width = 2),
                                                      bs4InfoBoxOutput("recall_box_all", width = 2),
                                                      bs4InfoBoxOutput("f1_box_all", width = 2),
-                                                     bs4InfoBox(title = "Gini Index", width = 2, status = "primary")),
+                                                     bs4InfoBoxOutput("gini_all", width = 2)),
 
                                             fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 8, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
@@ -184,7 +185,15 @@ ui = bs4DashPage(
                                                                dropdownDivider(),
                                                                dropdownItem(name = "to show detailed information")
                                                              )),
-                                                     bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE)),
+                                                     bs4Card(title = "Confusion Matrix", plotlyOutput("heatmap", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "Every Class Confusion is transformed into a Confusion Score"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "The absolute value of a Confusion Score displays:"),
+                                                               dropdownItem(name = "Absolute value near 1 = very good"),
+                                                               dropdownItem(name = "Absolute value near 0 = very poor")
+                                                             ))),
                                             fluidRow(bs4Card(title = "Bilateral Confusion Plot",plotlyOutput("sankey"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -567,21 +576,6 @@ server = function(input, output, session) {
     )
   })
   
-  output$precision_box_single <- renderbs4InfoBox({
-    if(length(input$models) != 1){return(bs4InfoBox(
-      title = "Model Precision",
-      0,
-      icon = "credit-card",
-      status = "primary"      
-    ))}
-    bs4InfoBox(
-      title = "Model Precision",
-      kpi_precision(),
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
   output$recall_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
       title = "Average Recall",
@@ -595,21 +589,6 @@ server = function(input, output, session) {
       icon = "credit-card",
       status = "primary"
     )  
-  })
-  
-  output$recall_box_single <- renderbs4InfoBox({
-    if(length(input$models) != 1){return(bs4InfoBox(
-      title = "Model Recall",
-      0,
-      icon = "credit-card",
-      status = "primary"      
-    ))}
-    bs4InfoBox(
-      title = "Model Recall",
-      kpi_recall(),
-      icon = "credit-card",
-      status = "primary"
-    )
   })
   
   output$f1_box_all <- renderbs4InfoBox({
@@ -627,21 +606,21 @@ server = function(input, output, session) {
     )  
   })
   
-  output$f1_box_single <- renderbs4InfoBox({
-    if(length(input$models) != 1){return(bs4InfoBox(
-      title = "Model F1-Score",
+  output$gini_all <- renderbs4InfoBox({
+    if(is.null(input$models)){return(bs4InfoBox(
+      title = "Gini-Index",
       0,
       icon = "credit-card",
-      status = "primary"      
+      status = "primary"
     ))}
     bs4InfoBox(
-      title = "Model F1-Score",
-      kpi_f1(),
+      title = "Gini-Index",
+      calculate_gini(),
       icon = "credit-card",
       status = "primary"
-    )
+    )  
   })
-  
+
   output$singleacc_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Accuracy",
@@ -895,7 +874,7 @@ server = function(input, output, session) {
     # Farbskala
     col <- brewer.pal(n = 9, name = 'Blues')
     
-    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y}<extra></extra>')) %>%
+    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y},<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black'))
     p
   })
@@ -1215,6 +1194,18 @@ server = function(input, output, session) {
     p
   })
   output$lorenzcurve <- renderPlotly({lorenzplot()})
+  
+  calculate_gini <- reactive({
+    data <- selected_models()
+    counts <- colSums(data)
+    classes <- selected_classes()
+    data <- as.data.frame(counts)
+    data$names <- selected_classes()
+    colnames(data) <- c("Count", "Class")
+    newdata <- data[order(data$Count),]
+    gini_score <- round(Gini(newdata$Count), 4)
+    gini_score
+  })
   
   
   
