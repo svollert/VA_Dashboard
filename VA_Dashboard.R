@@ -147,7 +147,14 @@ ui = bs4DashPage(
                                                                          choices = "",
                                                                          multiple = FALSE)),
                                                      bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table"), width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
-                                            fluidRow(bs4Card(title = "Delta Confusion Matrix", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE),
+                                            fluidRow(bs4Card(title = "Delta Confusion Matrix", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                             dropdownIcon = "question",
+                                                             dropdownMenu = dropdownItemList(
+                                                               dropdownItem(name = "Red displays better Performance of Reference Model"),
+                                                               dropdownItem(name = "Green displays better Performance of Comparing Model"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "Color intensity displays the degree of difference")
+                                                             )),
                                                      bs4Card(title = "Delta Error Radar Chart", plotlyOutput("radarchartdeltaplot"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -164,9 +171,9 @@ ui = bs4DashPage(
                                             h2("Detailed Information on a singular classification model"),
                                             fluidRow(bs4InfoBoxOutput("singleacc_box", width = 2),
                                                      bs4InfoBoxOutput("singlebaseacc_box", width = 2),
-                                                     bs4InfoBoxOutput("precision_box_single", width = 2),
-                                                     bs4InfoBoxOutput("recall_box_single", width = 2),
-                                                     bs4InfoBoxOutput("f1_box_single", width = 2),
+                                                     bs4InfoBoxOutput("precision_box", width = 2),
+                                                     bs4InfoBoxOutput("recall_box", width = 2),
+                                                     bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
                                             fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
 
@@ -485,6 +492,15 @@ server = function(input, output, session) {
     )
   })
   
+  output$nomodels_box <- renderbs4InfoBox({
+    bs4InfoBox(
+      title = "Number of Models",
+      length(input$models),
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
   output$acc_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
       title = "Average Accuracy",
@@ -626,70 +642,13 @@ server = function(input, output, session) {
     )
   })
   
-  output$nomodels_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Number of Models",
-      length(input$models),
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
-  output$precision_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Precision",
-      if (length(input$models) != 1) {
-        0
-      } else {
-      round(diag(as.matrix(selected_models())) / colSums(as.matrix(selected_models())),4)},
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
-  output$recall_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Recall",
-      if (length(input$models) != 1) {
-        0
-      } else {
-      round(diag(as.matrix(selected_models())) / rowSums(selected_models()),4)},
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
-  output$f1_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "F1-Score",
-      if (length(input$models) != 1) {
-        0
-      } else {
-      round((2 * (diag(as.matrix(selected_models())) / colSums(selected_models())) * (diag(as.matrix(selected_models())) / rowSums(selected_models())) / (diag(as.matrix(selected_models())) / colSums(selected_models()) + diag(as.matrix(selected_models())) / rowSums(selected_models()))),4)},
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
-  output$kappa_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Kappa-Score",
-      if (length(input$models) != 1) {
-        0
-      } else {
-      round((((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())) - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))) / (1 - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))), 4)},
-      icon = "credit-card",
-      status = "primary"
-    )
-  })
-  
   output$singleacc_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Accuracy",
       if (length(input$models) != 1) {
         0
       } else {
-      round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()),4)},
+        round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()),4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -703,6 +662,54 @@ server = function(input, output, session) {
       } else {
         round(max(colSums(selected_models())) / sum(selected_models()),4)
       },
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$precision_box <- renderbs4InfoBox({
+    bs4InfoBox(
+      title = "Precision",
+      if (length(input$models) != 1) {
+        0
+      } else {
+      round(mean(diag(as.matrix(selected_models())) / rowSums(selected_models())), 4)},
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$recall_box <- renderbs4InfoBox({
+    bs4InfoBox(
+      title = "Recall",
+      if (length(input$models) != 1) {
+        0
+      } else {
+      round(mean(diag(as.matrix(selected_models())) / colSums(selected_models())), 4)},
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$f1_box <- renderbs4InfoBox({
+    bs4InfoBox(
+      title = "F1-Score",
+      if (length(input$models) != 1) {
+        0
+      } else {
+      round((2 * (mean(diag(as.matrix(selected_models())) / colSums(selected_models())) * (mean(diag(as.matrix(selected_models())) / rowSums(selected_models()))) / (mean(diag(as.matrix(selected_models())) / colSums(selected_models())) + (mean(diag(as.matrix(selected_models())) / rowSums(selected_models())))))),4)},
+      icon = "credit-card",
+      status = "primary"
+    )
+  })
+  
+  output$kappa_box <- renderbs4InfoBox({
+    bs4InfoBox(
+      title = "Kappa-Score",
+      if (length(input$models) != 1) {
+        0
+      } else {
+      round((((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())) - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))) / (1 - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))), 4)},
       icon = "credit-card",
       status = "primary"
     )
