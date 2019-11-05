@@ -107,7 +107,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the points"),
                                                                dropdownItem(name = "to show detailed information")
                                                              ))),
-                                            fluidRow(bs4Card(title = "Class and Model Query view", plotlyOutput("parcoord"), width = 8, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
+                                            fluidRow(bs4Card(title = "Per-class Error Query View", plotlyOutput("parcoord"), width = 8, collapsible = TRUE, status = "primary", collapsed = FALSE, closable = FALSE, maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can highlight aspects by"),
@@ -1380,12 +1380,12 @@ server = function(input, output, session) {
       for(j in seq(1,ncol(cm))) {
         vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
       }
-      vector_score <- 1- sd(vector_score)
+      vector_score <- sd(vector_score)
       results <- c(results, vector_score)
     }
     
     x <- list(
-      title = "1 - Standard deviation of per-class errors",
+      title = "Standard deviation of recalls",
       titlefont = f
     )
     y <- list(
