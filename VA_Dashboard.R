@@ -174,8 +174,12 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("recall_box", width = 2),
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
-                                            
-
+                                            fluidRow(bs4Card(title = "Select Model for Detailed View", width = 12, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                                             pickerInput(inputId = "detailedmodel",
+                                                                         label = NULL,
+                                                                         choices = "",
+                                                                         multiple = FALSE))),
+                                        
                                             fluidRow(bs4Card(title = "Confusion Circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -857,11 +861,13 @@ server = function(input, output, session) {
   output$radarchartdeltaplot <- renderPlotly({radarchartdeltaplot()})
   
   heatmapplot <- reactive({
-    if(length(input$models) != 1){return()}
+    if(length(input$models) == 0){return()}
+    model <- match(input$detailedmodel,modelnames())
     if(input$valueswitch == TRUE){
       data <- round(selected_models_percentage(),3)}
     else{
       data <- selected_models()}
+    data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
     classes <- selected_classes()
     rownames(data) <- classes
     colnames(data) <- rev(classes)
@@ -1057,11 +1063,13 @@ server = function(input, output, session) {
   output$heatmap_comparison <- renderPlotly({heatmapplot_comparison()})
   
   chorddiagrammplot <- reactive({
-    if(length(input$models) != 1){return()}
+    if(length(input$models) == 0){return()}
+    model <- match(input$detailedmodel,modelnames())
     if(input$valueswitch == TRUE){
       cm <- selected_models_missclassified_percentage()}
     else{
       cm <- selected_models_missclassified()}
+    cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     cm <- t(as.matrix(cm))
     rownames(cm) <- selected_classes()
     colnames(cm) <- rownames(cm)
@@ -1072,15 +1080,17 @@ server = function(input, output, session) {
   
   
   sankeyplot <- reactive({
-    if(length(input$models) != 1){return()}
+    if(length(input$models) == 0){return()}
+    model <- match(input$detailedmodel,modelnames())
     cm <- selected_models()
-    
+    cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     # Anzahl Klassen aus Konfusionsmatrix ermitteln
     no_classes <- ncol(cm)
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
     cm_used_model <- selected_models() # 1 ist abhängig vom ausgewÃ¤hlten Modell
+    cm_used_model <- cm_used_model[(model*ncol(cm_used_model)-(ncol(cm_used_model)-1)):(model*ncol(cm_used_model)),]
     
     id <- c(1:(2*no_classes))
     labels <- selected_classes()
@@ -1254,11 +1264,13 @@ server = function(input, output, session) {
   
   
   treemapplot <- reactive({
-    if(length(input$models) != 1){return()}
+    if(length(input$models) == 0){return()}
+    model <- match(input$detailedmodel,modelnames())
     if(input$valueswitch == TRUE){
       data <- selected_models_missclassified_percentage()}
     else{
       data <- selected_models_missclassified()}
+    data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
     classes <- selected_classes()
     rownames(data) <- classes
     colnames(data) <- classes
@@ -1445,7 +1457,13 @@ server = function(input, output, session) {
     available_models <- modelnames()
     updatePickerInput(session, "comparingmodel", choices = available_models, selected = available_models[2])
   })
+  
 
+  observeEvent(modelnames(), {
+    available_models <- modelnames()
+    updatePickerInput(session, "detailedmodel", choices = available_models, selected = available_models[1])
+  })
+    
   observeEvent(data(), {
     available_classes <- classnames()
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
