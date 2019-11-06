@@ -57,8 +57,7 @@ ui = bs4DashPage(
                              bs4SidebarMenuItem("Model Overview", tabName = "dashboard1", icon = "sliders"),
                              bs4SidebarMenuItem("Model Details", tabName = "dashboard2", icon = "calculator"),
                              bs4SidebarMenuItem("Model Comparison", tabName = "modelcomparison", icon = "handshake"),
-                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "th-large"),
-                             bs4SidebarMenuItem("debug", tabName = "debug"))),
+                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "th-large"))),
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
@@ -126,7 +125,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can select/deselect models"),
                                                                dropdownItem(name = "by clicking on them")
                                                              ))),
-                                            fluidRow(bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                            fluidRow(bs4Card(title = "Error Hierarchy Plot", plotlyOutput("sunburst_plot", width = "100%"), width = 12, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can drill down/up by"),
@@ -134,8 +133,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = HTML("<br>")),
                                                                dropdownItem(name = "You can hover over the panel"),
                                                                dropdownItem(name = "to show detailed information")
-                                                             )),
-                                                     bs4Card(title = "Network Graph", plotlyOutput("network_plot"), width = 6, closable = FALSE, status = "primary", maximizable = TRUE))),
+                                                             )))),
 
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
@@ -147,8 +145,7 @@ ui = bs4DashPage(
                                                              pickerInput(inputId = "comparingmodel",
                                                                          label = NULL,
                                                                          choices = "",
-                                                                         multiple = FALSE)),
-                                                     bs4Card(title = "Model Information", DT::dataTableOutput("model_comparison_table"), width = 8, status = "primary", collapsible = TRUE, closable = FALSE, collapsed = FALSE)),
+                                                                         multiple = FALSE))),
                                             fluidRow(bs4Card(title = "Delta Confusion Matrix", plotlyOutput("heatmap_comparison"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -177,7 +174,7 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("recall_box", width = 2),
                                                      bs4InfoBoxOutput("f1_box", width = 2),
                                                      bs4InfoBoxOutput("kappa_box", width = 2)),
-                                            fluidRow(bs4Card(title = "Distribution Plot", width = 12, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
+                                            
 
                                             fluidRow(bs4Card(title = "Confusion Circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
                                                              dropdownIcon = "question",
@@ -214,13 +211,11 @@ ui = bs4DashPage(
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
-                                                     bs4InfoBoxOutput("samples_box", width = 2)),
+                                                     bs4InfoBoxOutput("samples_box", width = 2),
+                                                     bs4InfoBoxOutput("gini_all_prop", width = 2)),
                                             fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
                                                      bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
-                                 bs4TabItem(tabName = "debug",
-                                            h2("debug"),
-                                            fluidRow(bs4Card(title = "debug", tableOutput("test")))))))
+                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))))))
 
 
 server = function(input, output, session) {
@@ -622,6 +617,21 @@ server = function(input, output, session) {
     )  
   })
 
+  output$gini_all_prop <- renderbs4InfoBox({
+    if(is.null(input$models)){return(bs4InfoBox(
+      title = "Gini-Index",
+      0,
+      icon = "credit-card",
+      status = "primary"
+    ))}
+    bs4InfoBox(
+      title = "Gini-Index",
+      calculate_gini(),
+      icon = "credit-card",
+      status = "primary"
+    )  
+  })
+  
   output$singleacc_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Accuracy",
