@@ -699,7 +699,7 @@ server = function(input, output, session) {
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
     data <- sunburst_data()
-    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3f}')) #color = ~parents, colors = ~parents)
+    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3f}', '<extra></extra>')) #color = ~parents, colors = ~parents)
       #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
       #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
@@ -734,7 +734,9 @@ server = function(input, output, session) {
     max_missclassified <- max(sums)
     parcoord_data <- as.data.frame(cbind(models, sums))
     colnames(parcoord_data) <- c("Models", classes)
+    colr <- unname(alphabet())
     
+    #start_statement = "list("
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
@@ -746,12 +748,29 @@ server = function(input, output, session) {
       }
     }
     loop_liste = paste(loop_liste, collapse = " ")
+
+    
+    sep_values <- seq(0, 1, 1/(length(input$models)-1))
+    sep_colr <- unname(colr[1:length(input$models)])
+    
+    loop_color = "list("
+    for (i in seq(1:length(input$models))) {
+      if (i != length(input$models)) {
+        text = sprintf("c(%s,'%s'),", sep_values[i], sep_colr[i])
+      } else {
+        text = sprintf("c(%s,'%s'))", sep_values[i], sep_colr[i])
+      }
+      loop_color = c(loop_color, text)
+    }
+    
+    loop_color = paste(loop_color, collapse = " ")
+    
+
     p <- parcoord_data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
-                          colorscale = list(c(0,'yellow'),c(1,'violetred'),c(2,'turquoise'),c(3,'lightgreen'),c(4,'green'),c(5,'orangered'),c(6,'red'),c(7,'chocolate'),c(8,'blue'),c(9,'brown'))),
+                          colorscale = eval(parse(text = loop_color))),
               dimensions = eval(parse(text = loop_liste ))
-              
       )
     p
   })
@@ -1258,7 +1277,7 @@ server = function(input, output, session) {
               index=c("group","subgroup"),
               vSize="value",
               type="index",
-              palette="Set3"
+              palette=alphabet()
     )            
     
     inter=d3tree2( p ,  rootname = "All" )
@@ -1395,7 +1414,7 @@ server = function(input, output, session) {
       titlefont = f
     )
     
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = unname(alphabet()), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y}', '<br><i>1-Std</i>: %{x}'))%>%
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y}', '<br><i>1-Std</i>: %{x}'))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
