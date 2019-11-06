@@ -26,6 +26,7 @@ library(igraph)
 library(BBmisc)
 library(dplyr)
 library(DescTools)
+library(pals)
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -697,7 +698,8 @@ server = function(input, output, session) {
   
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
-    p <- plot_ly(sunburst_data(), labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844', '#2e4215', '#7a2b14', '#2f162a'))) #color = ~parents, colors = ~parents)
+    data <- sunburst_data()
+    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3f}')) #color = ~parents, colors = ~parents)
       #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
       #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
@@ -744,7 +746,6 @@ server = function(input, output, session) {
       }
     }
     loop_liste = paste(loop_liste, collapse = " ")
-    
     p <- parcoord_data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
@@ -811,7 +812,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', name = models[i], marker = list(symbol = "square", size = 8), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(c("Red", "Green")[i], alpha.f = 0.5), name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     if(input$valueswitch == FALSE){
@@ -820,7 +821,7 @@ server = function(input, output, session) {
     else{
       mittel <- round(colSums(mittel)/length(input$models),4)
     }
-    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", line = list(color = "Blue"), theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     p
   })
   
@@ -1035,7 +1036,7 @@ server = function(input, output, session) {
     cm <- t(as.matrix(cm))
     rownames(cm) <- selected_classes()
     colnames(cm) <- rownames(cm)
-    chorddiag(cm, type = "directional", showTicks = T, groupnameFontsize = 14, groupnamePadding = 30, margin = 90, palette = "Set3")
+    chorddiag(cm, type = "directional", showTicks = T, groupnameFontsize = 14, groupnamePadding = 30, margin = 90, groupColors = unname(alphabet()))
   })
   output$chorddiagramm <- renderChorddiag({chorddiagrammplot()})
   
@@ -1059,7 +1060,8 @@ server = function(input, output, session) {
     cm_model_totals <- append(cm_model_totals, cm_model_totals)
     
     # Farben
-    col <- distinctColorPalette(no_classes, altCol=T)
+    #col <- distinctColorPalette(no_classes, altCol=T)
+    col <- unname(alphabet()[1:no_classes])
     col <- append(col, col)
     
     # Gewichtete Knoten erstellen
