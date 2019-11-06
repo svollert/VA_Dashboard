@@ -286,6 +286,14 @@ server = function(input, output, session) {
     selected_models_percentage
   })
   
+  selected_models_single <- reactive({
+    if(is.null(modelnames)){return()}
+    model <- match(input$detailedmodel ,modelnames())
+    data <- selected_models()
+    data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
+    data
+  })
+  
   selected_models_missclassified <- reactive({
     if(is.null(modelnames)){return()}
     options <- modelnames()
@@ -305,6 +313,14 @@ server = function(input, output, session) {
     else{
       sel_models
     }
+  })
+  
+  selected_models_missclassified_single <- reactive({
+    if(is.null(modelnames)){return()}
+    model <- match(input$detailedmodel ,modelnames())
+    data <- selected_models_missclassified()
+    data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
+    data
   })
   
   # Nur die wirklichen Prozente der Fehlklassifizierten
@@ -639,10 +655,10 @@ server = function(input, output, session) {
   output$singleacc_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Accuracy",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 0) {
         0
       } else {
-        round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()),4)},
+        round((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single()),4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -651,10 +667,10 @@ server = function(input, output, session) {
   output$singlebaseacc_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Baseline Accuracy",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 1) {
         0
       } else {
-        round(max(colSums(selected_models())) / sum(selected_models()),4)
+        round(max(colSums(selected_models_single())) / sum(selected_models_single()),4)
       },
       icon = "credit-card",
       status = "primary"
@@ -664,10 +680,10 @@ server = function(input, output, session) {
   output$precision_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Precision",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 0) {
         0
       } else {
-      round(mean(diag(as.matrix(selected_models())) / rowSums(selected_models())), 4)},
+        round(mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())), 4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -676,10 +692,10 @@ server = function(input, output, session) {
   output$recall_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Recall",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 0) {
         0
       } else {
-      round(mean(diag(as.matrix(selected_models())) / colSums(selected_models())), 4)},
+        round(mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())), 4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -688,10 +704,10 @@ server = function(input, output, session) {
   output$f1_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "F1-Score",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 0) {
         0
       } else {
-      round((2 * (mean(diag(as.matrix(selected_models())) / colSums(selected_models())) * (mean(diag(as.matrix(selected_models())) / rowSums(selected_models()))) / (mean(diag(as.matrix(selected_models())) / colSums(selected_models())) + (mean(diag(as.matrix(selected_models())) / rowSums(selected_models())))))),4)},
+        round((2 * (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) * (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single()))) / (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) + (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())))))),4)},
       icon = "credit-card",
       status = "primary"
     )
@@ -700,10 +716,10 @@ server = function(input, output, session) {
   output$kappa_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Kappa-Score",
-      if (length(input$models) != 1) {
+      if (length(input$models) == 0) {
         0
       } else {
-      round((((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())) - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))) / (1 - (sum((rowSums(selected_models()) / sum(selected_models())) * ((colSums(selected_models()) / sum(selected_models())))))), 4)},
+        round((((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single())) - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))) / (1 - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))), 4)},
       icon = "credit-card",
       status = "primary"
     )
