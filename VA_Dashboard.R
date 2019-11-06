@@ -26,6 +26,7 @@ library(igraph)
 library(BBmisc)
 library(dplyr)
 library(DescTools)
+library(pals)
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -732,7 +733,9 @@ server = function(input, output, session) {
     max_missclassified <- max(sums)
     parcoord_data <- as.data.frame(cbind(models, sums))
     colnames(parcoord_data) <- c("Models", classes)
+    colr <- unname(alphabet())
     
+    #start_statement = "list("
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
     loop_liste = c(start_statement)
     for(i in seq(1:ncol(selected_models_missclassified()))){
@@ -745,12 +748,26 @@ server = function(input, output, session) {
     }
     loop_liste = paste(loop_liste, collapse = " ")
     
+    sep_values <- seq(0, 1, 1/(length(input$models)-1))
+    sep_colr <- unname(colr[1:length(input$models)])
+    
+    loop_color = "list("
+    for (i in seq(1:length(input$models))) {
+      if (i != length(input$models)) {
+        text = sprintf("c(%s,'%s'),", sep_values[i], sep_colr[i])
+      } else {
+        text = sprintf("c(%s,'%s'))", sep_values[i], sep_colr[i])
+      }
+      loop_color = c(loop_color, text)
+    }
+    
+    loop_color = paste(loop_color, collapse = " ")
+    
     p <- parcoord_data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
-                          colorscale = list(c(0,'yellow'),c(1,'violetred'),c(2,'turquoise'),c(3,'lightgreen'),c(4,'green'),c(5,'orangered'),c(6,'red'),c(7,'chocolate'),c(8,'blue'),c(9,'brown'))),
+                          colorscale = eval(parse(text = loop_color))),
               dimensions = eval(parse(text = loop_liste ))
-              
       )
     p
   })
