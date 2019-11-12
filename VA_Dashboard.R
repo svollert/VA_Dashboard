@@ -65,12 +65,15 @@ ui = bs4DashPage(
                                  h6(helpText("Choose the seperator")),
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
                                  h6(helpText("Choose the file")),
+                                 h6(helpText(HTML("Labels = Columns <br> Predictions = Rows"))),
                                  fileInput("file", accept = c(".csv"), label = NULL, buttonLabel = "Search"),
+                                 h6(HTML("<hr>")),
                                  h5(helpText("Upload model descriptions")),
                                  h6(helpText("Choose the seperator")),
                                  pickerInput(inputId = "sep2", label = NULL, choices = c(Newline = "\n", Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = "\n", multiple = FALSE),
                                  h6(helpText("Choose the file")),
                                  fileInput("modelnames", accept = c(".txt"), label = NULL, buttonLabel = "Search"),
+                                 h6(HTML("<hr>")),
                                  h5(helpText("Select the Models")),
                                  pickerInput(inputId = "models",
                                              label = NULL,
@@ -82,6 +85,7 @@ ui = bs4DashPage(
                                              multiple = TRUE),
                                  h5(helpText("Select the Classes which are not relevant")),
                                  uiOutput("classlimit"),
+                                 h6(HTML("<hr>")),
                                  h5(helpText("Display absolute or percentage values?")),
                                  switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
@@ -528,13 +532,13 @@ server = function(input, output, session) {
   
   output$acc_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
-      title = "Average Accuracy",
+      title = "Avg. Accuracy",
       0,
       icon = "credit-card",
       status = "primary"
     ))}
     bs4InfoBox(
-      title = "Average Accuracy",
+      title = "Avg. Accuracy",
       round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()), 4),
       icon = "credit-card",
       status = "primary"
@@ -579,13 +583,13 @@ server = function(input, output, session) {
   
   output$precision_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
-      title = "Average Precision",
+      title = "Avg. Macro Precision",
       0,
       icon = "credit-card",
       status = "primary"
     ))}
     bs4InfoBox(
-      title = "Average Precision",
+      title = "Avg. Macro Precision",
       kpi_precision(),
       icon = "credit-card",
       status = "primary"
@@ -594,13 +598,13 @@ server = function(input, output, session) {
   
   output$recall_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
-      title = "Average Recall",
+      title = "Avg. Macro Recall",
       0,
       icon = "credit-card",
       status = "primary"
     ))}
     bs4InfoBox(
-      title = "Average Recall",
+      title = "Avg. Macro Recall",
       kpi_recall(),
       icon = "credit-card",
       status = "primary"
@@ -609,13 +613,13 @@ server = function(input, output, session) {
   
   output$f1_box_all <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
-      title = "Average F1",
+      title = "Avg. Macro F1",
       0,
       icon = "credit-card",
       status = "primary"
     ))}
     bs4InfoBox(
-      title = "Average F1",
+      title = "Avg. Macro F1",
       kpi_f1(),
       icon = "credit-card",
       status = "primary"
@@ -861,7 +865,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(c("Red", "Green")[i], alpha.f = 0.5), name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = c(rgb(180/255,0,0,0.5), rgb(0,200/255,0,0.5))[i], name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     if(input$valueswitch == FALSE){
@@ -870,7 +874,7 @@ server = function(input, output, session) {
     else{
       mittel <- round(colSums(mittel)/length(input$models),4)
     }
-    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", line = list(color = "Blue"), theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", line = list(color = "Black", dash = "dot"), theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
     p
   })
   
@@ -927,7 +931,8 @@ server = function(input, output, session) {
     col <- brewer.pal(n = 9, name = 'Blues')
     
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y},<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
-      add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black'))
+      add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black')) %>%
+      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"))
     p
   })
   
@@ -1070,7 +1075,8 @@ server = function(input, output, session) {
     
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", 
                  colors = col, zauto = F, zmin = -1, zmax = 1, hovertemplate = paste('<i>True Value </i>: %{x}', '<br><i>Pred. Value </i>: %{y}', '<br><i>Comp. Index </i>: %{z:.3f}<extra></extra>')) %>%
-      add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black'))
+      add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black')) %>%
+      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"))
     p    
   })
   
@@ -1451,8 +1457,8 @@ server = function(input, output, session) {
       title = "Overall Accuracy",
       titlefont = f
     )
-    
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = input$models, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y}', '<br><i>1-Std</i>: %{x}'))%>%
+    modelnames <- factor(input$models, levels = input$models)
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y}', '<br><i>1-Std</i>: %{x}'))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
