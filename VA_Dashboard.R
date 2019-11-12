@@ -32,7 +32,7 @@ ui = bs4DashPage(
   old_school = FALSE,
   sidebar_collapsed = FALSE,
   controlbar_collapsed = FALSE,
-  title = "VA Project SS 19",
+  title = "ML-ModelExplorer",
   navbar = bs4DashNavbar(skin = "light",
                          status = "white",
                          border = TRUE,
