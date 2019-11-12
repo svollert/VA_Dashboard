@@ -115,7 +115,10 @@ ui = bs4DashPage(
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can highlight aspects by"),
-                                                               dropdownItem(name = "using a brush stroke on the axis")
+                                                               dropdownItem(name = "using a brush stroke on the axis"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "You can deselect the aspects by"),
+                                                               dropdownItem(name = "clicking on the the axis")
                                                              )),
                                                      bs4Card(title = "Class Error Radar Chart", plotlyOutput("radarchart"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
@@ -213,7 +216,10 @@ ui = bs4DashPage(
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can click on a tile"),
-                                                               dropdownItem(name = "to show detailed information")
+                                                               dropdownItem(name = "to show detailed information"),
+                                                               dropdownItem(name = HTML("<hr>")),
+                                                               dropdownItem(name = "You can click on the heading of the box"),
+                                                               dropdownItem(name = "to return to the original view")
                                                              )))),
 
                                  bs4TabItem(tabName = "dataproperties",
