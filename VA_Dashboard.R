@@ -143,12 +143,12 @@ ui = bs4DashPage(
                                                              )))),
 
                                  bs4TabItem(tabName = "modelcomparison",
-                                            fluidRow(bs4Card(title = "Select Reference Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                            fluidRow(bs4Card(title = "Select Reference Model", width = 3, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
                                                                          label = NULL,
                                                                          choices = "",
                                                                          multiple = FALSE)),
-                                                     bs4Card(title = "Select Comparing Model", width = 2, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
+                                                     bs4Card(title = "Select Comparing Model", width = 3, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "comparingmodel",
                                                                          label = NULL,
                                                                          choices = "",
@@ -689,7 +689,7 @@ server = function(input, output, session) {
   
   output$precision_box <- renderbs4InfoBox({
     bs4InfoBox(
-      title = "Precision",
+      title = "Macro Precision",
       if (length(input$models) == 0) {
         0
       } else {
@@ -701,7 +701,7 @@ server = function(input, output, session) {
   
   output$recall_box <- renderbs4InfoBox({
     bs4InfoBox(
-      title = "Recall",
+      title = "Macro Recall",
       if (length(input$models) == 0) {
         0
       } else {
@@ -713,7 +713,7 @@ server = function(input, output, session) {
   
   output$f1_box <- renderbs4InfoBox({
     bs4InfoBox(
-      title = "F1-Score",
+      title = "Macro F1-Score",
       if (length(input$models) == 0) {
         0
       } else {
@@ -1099,9 +1099,22 @@ server = function(input, output, session) {
       cm <- selected_models_missclassified()}
     cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     cm <- t(as.matrix(cm))
+    ticks <- round(max(colSums(cm))/40, 2)
+    if(input$valueswitch == FALSE){
+      ticks <- trunc(ticks / 10) * 10
+      if(ticks == 0){
+        ticks <- 1
+      }
+    }
+    if(ticks == 0.00 && input$valueswitch == TRUE){
+      ticks <- 0.002
+    }
     rownames(cm) <- selected_classes()
     colnames(cm) <- rownames(cm)
-    chorddiag(cm, type = "directional", showTicks = T, groupnameFontsize = 14, groupnamePadding = 30, margin = 90, groupColors = unname(alphabet()))
+    if(input$valueswitch == TRUE){
+      cm <- round(cm,4)
+    }
+    chorddiag(cm, type = "directional", showTicks = T, tickInterval = ticks, groupnameFontsize = 14, groupnamePadding = 30, groupPadding = 3, margin = 50, groupColors = unname(alphabet()))
   })
   output$chorddiagramm <- renderChorddiag({chorddiagrammplot()})
   
