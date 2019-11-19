@@ -821,9 +821,11 @@ server = function(input, output, session) {
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
-      cm <- round(selected_models_missclassified_percentage(),4)}
+      cm <- round(selected_models_missclassified_percentage(),4)
+      hover <- '<i>Percentage </i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'}
     else{
-      cm <- selected_models_missclassified()}
+      cm <- selected_models_missclassified()
+      hover <- '<i>Count </i>: %{r} <br><i>Miss. as </i>: %{theta}'}
     models <- input$models
     classes <- selected_classes()
     cm2=data.frame(matrix(ncol=0,nrow=ncol(cm)))
@@ -836,7 +838,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(alphabet()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(alphabet()[i])), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(alphabet()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(alphabet()[i])), hovertemplate = paste(hover))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
@@ -850,10 +852,14 @@ server = function(input, output, session) {
     if(input$valueswitch == TRUE){
       cm <- comparisondata_percentage()
       mittel <- selected_models_missclassified_percentage()
+      hover <- '<i>Percentage </i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'
+      avghover <- '<i>Percentage</i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'
     }
     else{
       cm <- comparisondata()
       mittel <- selected_models_missclassified()
+      hover <- '<i>Count </i>: %{r} <br><i>Miss. as </i>: %{theta}'
+      avghover <- '<i>Count</i>: %{r} <br><i>Miss. as </i>: %{theta}'
     }
     diag1 <- 1:(2*ncol(cm))
     diag2<- rep(1:ncol(cm),2)
@@ -871,7 +877,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = c(rgb(180/255,0,0,0.5), rgb(0,200/255,0,0.5))[i], name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste('<i>Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = c(rgb(180/255,0,0,0.5), rgb(0,200/255,0,0.5))[i], name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste(hover))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     if(input$valueswitch == FALSE){
@@ -880,7 +886,7 @@ server = function(input, output, session) {
     else{
       mittel <- round(colSums(mittel)/length(input$models),4)
     }
-    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", line = list(color = "Black", dash = "dot"), theta = c(classes, classes[1]), name = "Average", hovertemplate = paste('<i>Average Count </i>: %{r} <br> <i>Miss. as </i>: %{theta}'))
+    p <- add_trace(p, r = c(mittel, mittel[1]), mode = "lines", line = list(color = "Black", dash = "dot"), theta = c(classes, classes[1]), name = "Average", hovertemplate = paste(avghover))
     p
   })
   
