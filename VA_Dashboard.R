@@ -1051,10 +1051,12 @@ server = function(input, output, session) {
       norm_data[norm_data >= 0] <- ((norm_data[norm_data >= 0])/max_element)
       norm_data[norm_data < 0] <- ((norm_data[norm_data < 0])/min_element)*(-1)      
     } else {
-      norm_data <- (norm_data - min_element)/(max_element - min_element)
+      if ((min_element != 0) && (max_element != 0)) {
+        norm_data <- (norm_data - min_element)/(max_element - min_element)       
+      }
     }
     
-    diag(norm_data) <- diag(norm_data) * (-1)
+    diag(norm_data) <- diag(norm_data) * (-1)      
     
     anno_x <- NULL
     anno_y <- NULL
