@@ -739,7 +739,7 @@ server = function(input, output, session) {
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
     data <- sunburst_data()
-    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3f}', '<extra></extra>')) #color = ~parents, colors = ~parents)
+    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) #color = ~parents, colors = ~parents)
       #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
       #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
@@ -936,7 +936,7 @@ server = function(input, output, session) {
     # Farbskala
     col <- brewer.pal(n = 9, name = 'Blues')
     
-    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y},<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
+    p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y}<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black')) %>%
       layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"))
     p
@@ -1369,9 +1369,9 @@ server = function(input, output, session) {
     }
     acc <- (e-f)/e
     models <- input$models
-    p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy") %>%
-      add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline") %>%
-      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random") %>%
+    p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Overall Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline", hovertemplate = paste('<i>Baseline</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random", hovertemplate = paste('<i>Random</i>: %{y:.4p}<extra></extra>')) %>%
       layout(xaxis = list(tickvals = models, tickmode = "array"))
   })
   output$errorline <- renderPlotly({errorlineplot()})
@@ -1479,7 +1479,7 @@ server = function(input, output, session) {
       titlefont = f
     )
     modelnames <- factor(input$models, levels = input$models)
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y}', '<br><i>1-Std</i>: %{x}'))%>%
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>1-Std</i>: %{x:.4p}'))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
