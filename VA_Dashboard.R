@@ -239,8 +239,12 @@ ui = bs4DashPage(
 server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
-    if(is.null(file1)){return()}
-    read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    if(is.null(file1)){
+      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/some_models_standardFormat_noMissing.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
+    }
+    else{
+      read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
   })
   
   modelnames <- reactive({
@@ -1459,7 +1463,6 @@ server = function(input, output, session) {
   
   observeEvent(input$classes, {
     if(length(input$classes) == 0){
-      print(length(input$classes))
       updatePickerInput(session, "classes",
                         choices = classnames(),
                         selected = NULL,
@@ -1493,6 +1496,14 @@ server = function(input, output, session) {
                                        yes = "",
                                        no = "color: lightgrey;")
                       ))
+  }, ignoreNULL = FALSE)
+  
+  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
+    available_models <- modelnames()
+    disabled_choices <- available_models %in% input$models
+    updatePickerInput(session, "models",
+                      choices = available_models,
+                      selected = available_models)
   }, ignoreNULL = FALSE)
   
   output$sum <- renderTable({
