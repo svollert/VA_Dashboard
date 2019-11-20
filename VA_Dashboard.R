@@ -78,16 +78,20 @@ ui = bs4DashPage(
                                  pickerInput(inputId = "models",
                                              label = NULL,
                                              choices = "",
-                                             options = pickerOptions(actionsBox = TRUE,
+                                             options = pickerOptions(actionsBox = FALSE,
                                                                      showTick = TRUE,
                                                                      size = 10,
-                                                                     selectedTextFormat = "count > 3"),
+                                                                     selectedTextFormat = "count > 3",
+                                                                     iconBase = "fa",
+                                                                     tickIcon = "code-fork",
+                                                                     style = "btn-primary",
+                                                                     countSelectedText = "{0} of {1} models chosen"), # code-fork führt dazu, dass kein Icon mehr zu sehen ist
                                              multiple = TRUE),
                                  h5(helpText("Select the Classes which are not relevant")),
                                  uiOutput("classlimit"),
                                  h6(HTML("<hr>")),
                                  h5(helpText("Display absolute or percentage values?")),
-                                 switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
+                                 switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentage",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
                                              size = "large")),
   footer = bs4DashFooter(),
@@ -258,10 +262,14 @@ server = function(input, output, session) {
     pickerInput(inputId = "classes",
                 choices = "",
                 options = pickerOptions(actionsBox = FALSE,
-                                        showTick = TRUE,
+                                        showTick = FALSE,
                                         size = 10,
-                                        selectedTextFormat = "count > 3",
-                                        maxOptions = length(classnames()) -3),
+                                        selectedTextFormat = "count",
+                                        maxOptions = length(classnames()) -3,
+                                        noneSelectedText = HTML("All classes selected"),
+                                        style = "btn-primary",
+                                        countSelectedText = "{0} of {1} classes deselected"),
+                
                 multiple = TRUE)   
   })
   
@@ -1449,7 +1457,43 @@ server = function(input, output, session) {
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
   
-
+  observeEvent(input$classes, {
+    if(length(input$classes) == 0){
+      print(length(input$classes))
+      updatePickerInput(session, "classes",
+                        choices = classnames(),
+                        selected = NULL,
+                        choicesOpt = list(
+                          style = "color: Black;"
+                        ))
+    }
+    else{
+      available_classes <- classnames()
+      disabled_choices <- available_classes %in% input$classes
+      updatePickerInput(session, "classes",
+                        choices = available_classes,
+                        selected = input$classes,
+                        choicesOpt = list(
+                          style = ifelse(disabled_choices,
+                                         yes = "color: lightgrey;",
+                                         no = "")
+                        ))
+    }
+    
+  }, ignoreNULL = FALSE)
+  
+  observeEvent(input$models, {
+    available_models <- modelnames()
+    disabled_choices <- available_models %in% input$models
+    updatePickerInput(session, "models",
+                      choices = available_models,
+                      selected = input$models,
+                      choicesOpt = list(
+                        style = ifelse(disabled_choices,
+                                       yes = "",
+                                       no = "color: lightgrey;")
+                      ))
+  }, ignoreNULL = FALSE)
   
   output$sum <- renderTable({
     if(is.null(data())){return ()}
