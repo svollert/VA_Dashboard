@@ -78,20 +78,16 @@ ui = bs4DashPage(
                                  pickerInput(inputId = "models",
                                              label = NULL,
                                              choices = "",
-                                             options = pickerOptions(actionsBox = FALSE,
+                                             options = pickerOptions(actionsBox = TRUE,
                                                                      showTick = TRUE,
                                                                      size = 10,
-                                                                     selectedTextFormat = "count > 3",
-                                                                     iconBase = "fa",
-                                                                     tickIcon = "code-fork",
-                                                                     style = "btn-primary",
-                                                                     countSelectedText = "{0} of {1} models chosen"), # code-fork führt dazu, dass kein Icon mehr zu sehen ist
+                                                                     selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
                                  h5(helpText("Select the Classes which are not relevant")),
                                  uiOutput("classlimit"),
                                  h6(HTML("<hr>")),
                                  h5(helpText("Display absolute or percentage values?")),
-                                 switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentage",
+                                 switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
                                              size = "large")),
   footer = bs4DashFooter(),
@@ -103,12 +99,12 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("recall_box_all", width = 2),
                                                      bs4InfoBoxOutput("f1_box_all", width = 2),
                                                      bs4InfoBoxOutput("gini_all", width = 2)),
-
+                                            
                                             fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plot", width = 8, closable = FALSE, status = "primary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Line Plot", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
-                                                                                                   <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
+                                                                                                          <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
                                                      bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -145,7 +141,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the panel"),
                                                                dropdownItem(name = "to show detailed information")
                                                              )))),
-
+                                 
                                  bs4TabItem(tabName = "modelcomparison",
                                             fluidRow(bs4Card(title = "Select Reference Model", width = 3, status = "primary", collapsible = TRUE, collapsed = FALSE, closable = FALSE,
                                                              pickerInput(inputId = "defaultmodel",
@@ -190,7 +186,7 @@ ui = bs4DashPage(
                                                                          label = NULL,
                                                                          choices = "",
                                                                          multiple = FALSE))),
-                                        
+                                            
                                             fluidRow(bs4Card(title = "Confusion Circle", chorddiagOutput("chorddiagramm", height = 500), width = 6, closable = FALSE, status = "primary", maximizable = TRUE, 
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -225,7 +221,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can click on the heading of the box"),
                                                                dropdownItem(name = "to return to the original view")
                                                              )))),
-
+                                 
                                  bs4TabItem(tabName = "dataproperties",
                                             h2("Data Properties"),
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
@@ -240,7 +236,7 @@ server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
     if(is.null(file1)){
-      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/some_models_standardFormat_noMissing.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
+      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
     }
     else{
       read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
@@ -266,14 +262,10 @@ server = function(input, output, session) {
     pickerInput(inputId = "classes",
                 choices = "",
                 options = pickerOptions(actionsBox = FALSE,
-                                        showTick = FALSE,
+                                        showTick = TRUE,
                                         size = 10,
-                                        selectedTextFormat = "count",
-                                        maxOptions = length(classnames()) -3,
-                                        noneSelectedText = HTML("All classes selected"),
-                                        style = "btn-primary",
-                                        countSelectedText = "{0} of {1} classes deselected"),
-                
+                                        selectedTextFormat = "count > 3",
+                                        maxOptions = length(classnames()) -3),
                 multiple = TRUE)   
   })
   
@@ -369,30 +361,30 @@ server = function(input, output, session) {
     selected_models_missclassified_percentage_per_class <- cm/csumdivide
     selected_models_missclassified_percentage_per_class
   })
-#  classnames <- reactive({
-#    classnames <- input$classnames
-#    if(input$classnamesheader == FALSE){return()}
-#    if(input$classnamesheader == TRUE){
-#      classnames <- colnames(data())
-#      return(classnames)
-#    }
-#  })
+  #  classnames <- reactive({
+  #    classnames <- input$classnames
+  #    if(input$classnamesheader == FALSE){return()}
+  #    if(input$classnamesheader == TRUE){
+  #      classnames <- colnames(data())
+  #      return(classnames)
+  #    }
+  #  })
   
   comparisondata <- reactive({
-  if(is.null(data())){return ()}
-  options <- modelnames()
-  rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
-  start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
-  end <- rows_d*ncol(selected_models())
-  rows_d <- seq(start, end)
-  rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
-  start <- (rows_c*ncol(selected_models())) - (ncol(selected_models())) + 1
-  end <- rows_c*ncol(selected_models())
-  rows_c <- seq(start, end)
-  data_d <- selected_models()[rows_d,]
-  data_c <- selected_models()[rows_c,]
-  data <- rbind(data_d, data_c)
-  data
+    if(is.null(data())){return ()}
+    options <- modelnames()
+    rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
+    start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
+    end <- rows_d*ncol(selected_models())
+    rows_d <- seq(start, end)
+    rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
+    start <- (rows_c*ncol(selected_models())) - (ncol(selected_models())) + 1
+    end <- rows_c*ncol(selected_models())
+    rows_c <- seq(start, end)
+    data_d <- selected_models()[rows_d,]
+    data_c <- selected_models()[rows_c,]
+    data <- rbind(data_d, data_c)
+    data
   })
   
   comparisondata_percentage <- reactive({
@@ -440,7 +432,7 @@ server = function(input, output, session) {
   
   classnames <- reactive({
     classnames <- colnames(data())
-    })
+  })
   
   selected_classes <- reactive({
     selected_classes <- colnames(selected_models())
@@ -479,15 +471,15 @@ server = function(input, output, session) {
     labels <- c(labels, input$models)
     classes <- paste(rep(input$models, each=ncol(sunburst_modelle)), selected_classes())
     labels <- c(labels, classes)
-
+    
     # Eltern festlegen
     parents <- " "
     parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
     parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
-
-    # Hilfsvariable um Ã¼ber Klassennamen zu verfÃ¼gen
+    
+    # Hilfsvariable um über Klassennamen zu verfügen
     vec_classes <- selected_classes()
-
+    
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         for (k in seq(1, ncol(sunburst_modelle))) {
@@ -498,22 +490,22 @@ server = function(input, output, session) {
         }
       }
     }
-
-    # Schleife fÃ¼r Anzahl Fehlklassifizierungen Ã¼ber alle Modelle
+    
+    # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
     values <- sum(sunburst_modelle)
-    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Modell
+    # Schleife für Anzahl Fehlklassifizierungen je Modell
     for (i in seq(1, length(input$models))) {
       values <- c(values, sum(colSums(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), ])))
     }
-
-    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Modell und Klasse
+    
+    # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))
       }
     }
-
-    # Schleife fÃ¼r Anzahl Fehlklassifizierungen je Classconfusion
+    
+    # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(sunburst_modelle))) {
         for (k in seq(1, ncol(sunburst_modelle))) {
@@ -528,7 +520,7 @@ server = function(input, output, session) {
     sunburst_data
   })
   
-
+  
   
   output$samples_box <- renderbs4InfoBox({
     bs4InfoBox(
@@ -658,7 +650,7 @@ server = function(input, output, session) {
       status = "primary"
     )  
   })
-
+  
   output$gini_all_prop <- renderbs4InfoBox({
     if(is.null(input$models)){return(bs4InfoBox(
       title = "Gini-Index",
@@ -752,8 +744,8 @@ server = function(input, output, session) {
     if(is.null(input$models)){return()}
     data <- sunburst_data()
     p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) #color = ~parents, colors = ~parents)
-      #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
-      #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
+    #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
+    #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
     p
     
@@ -765,7 +757,7 @@ server = function(input, output, session) {
     p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type = "sunburst", maxdepth = 3)
   })
   
-
+  
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
@@ -800,7 +792,7 @@ server = function(input, output, session) {
       }
     }
     loop_liste = paste(loop_liste, collapse = " ")
-
+    
     
     sep_values <- seq(0, 1, 1/(length(input$models)-1))
     sep_colr <- unname(colr[1:length(input$models)])
@@ -817,7 +809,7 @@ server = function(input, output, session) {
     
     loop_color = paste(loop_color, collapse = " ")
     
-
+    
     p <- parcoord_data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
@@ -920,8 +912,8 @@ server = function(input, output, session) {
     norm_data <- as.matrix(data)
     max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
     min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
-    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert auÃŸerhalb der Diagonalen
-    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert auÃŸerhalb der Diagonalen
+    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
+    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
     if ((0.8*min_diag) > max_not_diag) {
       diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
       norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
@@ -961,7 +953,7 @@ server = function(input, output, session) {
   })
   
   output$heatmap <- renderPlotly({heatmapplot()})
- 
+  
   
   heatmapplot_comparison <- reactive({
     if(is.null(input$models)) {return()}
@@ -1081,7 +1073,7 @@ server = function(input, output, session) {
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
-    cm_used_model <- selected_models() # 1 ist abhÃ¤ngig vom ausgewÃƒÂ¤hlten Modell
+    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewÃ¤hlten Modell
     cm_used_model <- cm_used_model[(model*ncol(cm_used_model)-(ncol(cm_used_model)-1)):(model*ncol(cm_used_model)),]
     
     id <- c(1:(2*no_classes))
@@ -1102,7 +1094,7 @@ server = function(input, output, session) {
     nodes$id <- as.numeric(nodes$id)
     nodes$weight <- as.numeric(nodes$weight)
     
-    # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     diag(cm_used_model) <- 0
     colnames(cm_used_model) <- c(1:no_classes)
     rownames(cm_used_model) <- c(1:no_classes)
@@ -1180,7 +1172,7 @@ server = function(input, output, session) {
     # col <- distinctColorPalette(no_classes, altCol=T)
     # col <- append(col, col)
     # 
-    # # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     # colnames(cm) <- c(1:no_classes)
     # rownames(cm_used_model) <- c(1:no_classes)
     # cm_used_model <- data.matrix(cm_used_model)
@@ -1300,7 +1292,7 @@ server = function(input, output, session) {
   })
   output$treemap <- renderD3tree2({treemapplot()})
   
-
+  
   errorlineplot <- reactive({
     if(is.null(input$models)){return()}
     data <- selected_models()
@@ -1450,53 +1442,16 @@ server = function(input, output, session) {
     updatePickerInput(session, "comparingmodel", choices = available_models, selected = available_models[2])
   })
   
-
+  
   observeEvent(modelnames(), {
     available_models <- modelnames()
     updatePickerInput(session, "detailedmodel", choices = available_models, selected = available_models[1])
   })
-    
+  
   observeEvent(data(), {
     available_classes <- classnames()
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
-  
-  observeEvent(input$classes, {
-    if(length(input$classes) == 0){
-      updatePickerInput(session, "classes",
-                        choices = classnames(),
-                        selected = NULL,
-                        choicesOpt = list(
-                          style = "color: Black;"
-                        ))
-    }
-    else{
-      available_classes <- classnames()
-      disabled_choices <- available_classes %in% input$classes
-      updatePickerInput(session, "classes",
-                        choices = available_classes,
-                        selected = input$classes,
-                        choicesOpt = list(
-                          style = ifelse(disabled_choices,
-                                         yes = "color: lightgrey;",
-                                         no = "")
-                        ))
-    }
-    
-  }, ignoreNULL = FALSE)
-  
-  observeEvent(input$models, {
-    available_models <- modelnames()
-    disabled_choices <- available_models %in% input$models
-    updatePickerInput(session, "models",
-                      choices = available_models,
-                      selected = input$models,
-                      choicesOpt = list(
-                        style = ifelse(disabled_choices,
-                                       yes = "",
-                                       no = "color: lightgrey;")
-                      ))
-  }, ignoreNULL = FALSE)
   
   observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
     available_models <- modelnames()
@@ -1521,7 +1476,7 @@ server = function(input, output, session) {
     #data()[1:10,]
     selected_models()
   }, filter = "top")
-
+  
 }
 
 shiny::shinyApp(ui, server)
