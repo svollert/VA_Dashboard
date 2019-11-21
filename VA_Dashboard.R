@@ -57,7 +57,8 @@ ui = bs4DashPage(
                              bs4SidebarMenuItem("Model Overview", tabName = "dashboard1", icon = "chart-bar"),
                              bs4SidebarMenuItem("Model Details", tabName = "dashboard2", icon = "microscope"),
                              bs4SidebarMenuItem("Model Comparison", tabName = "modelcomparison", icon = "balance-scale"),
-                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "cogs"))),
+                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "cogs"),
+                             bs4SidebarMenuItem("Information", tabName = "information", icon = "info"))),
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
@@ -229,7 +230,25 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("gini_all_prop", width = 2)),
                                             fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
                                                      bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
-                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))))))
+                                            fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
+                                 bs4TabItem(tabName = "information",
+                                            h2("Dashboard Information"),
+                                            fluidRow(bs4Card(title = "Explanation Video", "To be uploaded soon.", width = 6),
+                                                     bs4Card(title = "Conference Paper", "To be uploaded soon.", width = 6)),
+                                            h2("Model overview information"),
+                                            fluidRow(bs4Card(title = "Per-model metrics plot", "This plot gives a quick overview of generally good or weak models. The models are contrasted using box plots of recall, precision and F1-score showing the dispersions of these per-class metrics. Box plots positioned at the top correspond to stronger models while the height of each box plot indicates the models' variability over the classes.", width = 6, height = 260),
+                                                     bs4Card(title = "Model similarity plot", "The (dis-)similarities between models are visible in this plot. For each model the overall accuracy and the standard deviation of the per-class accuracies (recalls) are extracted, allowing to present all models in a 2D-scatter plot. Similar models are thereby placed close to each other, where multiple similar models might reveal clusters. Weak, strong, or models with highly different results become obvious as outliers.", width = 6, height = 260)),
+                                            fluidRow(bs4Card(title = "Per-class errors query view", "This view shows the per-class errors for all models and allows for refined queries for models or classes. The per-class errors are mapped to a parallel coordinates which in general show multi-dimensional relations line segments between parallel axes. A brushing operation allows for the highlighting of value ranges. In the per-class errors query view, the first axis shows the models and each class is mapped to one axis with low per-class errors at the bottom. For each model, line segments connect the per-class errors.", width = 6, height = 260),
+                                                     bs4Card(title = "Class error radar chart", "The per-class errors can be interactively analysed in a radar chart, where the errors are mapped to axes. Transparent colour encoding allows to distinguish overlapping models. The models' results can be rapidly contrasted, larger areas showing generally high per-class errors, and the shape indicating high or low errors on specific classes. The analysis can be incrementally refined by removing models from the plot.", width = 6, height = 260)),
+                                            fluidRow(bs4Card(title = "Error hierarchy plot", "This plot allows to navigate through all errors per model and class in one view. The hierarchy of (1) the overall errors for each model, (2) the per-class errors, and (3) the class confusions is accessible in a sun burst diagram. The errors at each level are ordered clockwise allowing to see the ranking.", width = 6, height = 260)),
+                                            h2("Model details informaion"),
+                                            fluidRow(bs4Card(title = "Confusion circle", "The classes are depicted by circle segments in one surrounding circle. The class confusions are shown with chords connecting the circle segments. The chords' widths encode the error between the classes. Individual classes can be highlighted and the detailed errors are shown on demand.", width = 6, height = 260),
+                                                     bs4Card(title = "Confusion matrix", "he model's confusion matrix is shown in the familiar tabular way, with a colour gradient encoding the class confusions.", width = 6, height = 260)),
+                                            fluidRow(bs4Card(title = "Bilateral confusion plot", "Misclassifications can be studied in an interactive Sankey diagram with one bar per class label on the left and predictions on the right. By rearranging and highlighting, the focus can be put on individual classes.", width = 6, height = 260),
+                                                     bs4Card(title = "Confusion tree map", "A model's per-class errors are ranked in a tree map and can be further investigated by viewing how one selected error is composed of the individual class confusions. If a class is selected, the ranked misclassifications to the other classes are shown on the next level.", width = 6, height = 260)),
+                                            h2("Model comparison information"),
+                                            fluidRow(bs4Card(title = "Delta confusion matrix", "The class confusions of a comparing model can be contrasted to a reference model showing where the comparing model is superior and where it needs optimization. The difference between the class confusions is visible per cell with shades of green encoding where the reference is superior to the comparing model and red where the comparing model is superior, respectively.", width = 6, height = 260),
+                                                     bs4Card(title = "Delta error radar chart", "The differences in the per-class errors of a comparing model w.r.t. a reference model or the average of all models is illustrated in a radar chart. The area and shape in the radar chart allows to rapidly draw conclusions about weak or strong accuracies on certain classes.", width = 6, height = 260))))))
 
 
 server = function(input, output, session) {
