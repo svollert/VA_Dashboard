@@ -54,10 +54,10 @@ ui = bs4DashPage(
                            brandColor = "primary",
                            bs4SidebarMenu(
                              bs4SidebarHeader("Dashboards"),
-                             bs4SidebarMenuItem("Model Overview", tabName = "dashboard1", icon = "sliders"),
-                             bs4SidebarMenuItem("Model Details", tabName = "dashboard2", icon = "calculator"),
-                             bs4SidebarMenuItem("Model Comparison", tabName = "modelcomparison", icon = "handshake"),
-                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "th-large"))),
+                             bs4SidebarMenuItem("Model Overview", tabName = "dashboard1", icon = "chart-bar"),
+                             bs4SidebarMenuItem("Model Details", tabName = "dashboard2", icon = "microscope"),
+                             bs4SidebarMenuItem("Model Comparison", tabName = "modelcomparison", icon = "balance-scale"),
+                             bs4SidebarMenuItem("Data Properties", tabName = "dataproperties", icon = "cogs"))),
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
@@ -241,6 +241,10 @@ server = function(input, output, session) {
     else{
       read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
+  })
+  
+  plotcolors <- reactive({
+    plotcolors <- c(alphabet(), alphabet2())
   })
   
   modelnames <- reactive({
@@ -743,7 +747,7 @@ server = function(input, output, session) {
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
     data <- sunburst_data()
-    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(alphabet()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) #color = ~parents, colors = ~parents)
+    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) #color = ~parents, colors = ~parents)
     #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
     #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
     
@@ -778,7 +782,7 @@ server = function(input, output, session) {
     max_missclassified <- max(sums)
     parcoord_data <- as.data.frame(cbind(models, sums))
     colnames(parcoord_data) <- c("Models", classes)
-    colr <- unname(alphabet())
+    colr <- unname(plotcolors())
     
     #start_statement = "list("
     start_statement = "list(list(range = c(1, max(models)),tickvals = models, label = 'Model', values = ~Models, ticktext = input$models),"
@@ -842,7 +846,7 @@ server = function(input, output, session) {
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
       k = j+1
-      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(alphabet()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(alphabet()[i])), hovertemplate = paste(hover))
+      p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(plotcolors()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(plotcolors()[i])), hovertemplate = paste(hover))
     }
     #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
@@ -1057,7 +1061,7 @@ server = function(input, output, session) {
     if(input$valueswitch == TRUE){
       cm <- round(cm,4)
     }
-    chorddiag(cm, type = "directional", showTicks = T, tickInterval = ticks, groupnameFontsize = 14, groupnamePadding = 30, groupPadding = 3, margin = 50, groupColors = unname(alphabet()))
+    chorddiag(cm, type = "directional", showTicks = T, tickInterval = ticks, groupnameFontsize = 14, groupnamePadding = 30, groupPadding = 3, margin = 50, groupColors = unname(plotcolors()))
   })
   output$chorddiagramm <- renderChorddiag({chorddiagrammplot()})
   
@@ -1084,7 +1088,7 @@ server = function(input, output, session) {
     
     # Farben
     #col <- distinctColorPalette(no_classes, altCol=T)
-    col <- unname(alphabet()[1:no_classes])
+    col <- unname(plotcolors()[1:no_classes])
     col <- append(col, col)
     
     # Gewichtete Knoten erstellen
@@ -1283,7 +1287,7 @@ server = function(input, output, session) {
               index=c("group","subgroup"),
               vSize="value",
               type="index",
-              palette=alphabet()
+              palette=plotcolors()
     )            
     
     inter=d3tree2( p ,  rootname = "All" )
@@ -1420,7 +1424,7 @@ server = function(input, output, session) {
       titlefont = f
     )
     modelnames <- factor(input$models, levels = input$models)
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(alphabet()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>1-Std</i>: %{x:.4p}'))%>%
+    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>1-Std</i>: %{x:.4p}'))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
