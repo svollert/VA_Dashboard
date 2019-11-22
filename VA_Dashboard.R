@@ -1484,6 +1484,18 @@ server = function(input, output, session) {
                       selected = available_models)
   }, ignoreNULL = FALSE)
   
+  observeEvent(input$models, {
+    if(input$detailedmodel %in% input$models){
+      selected_detail_model <- input$detailedmodel
+    }
+    else{
+      selected_detail_model <- input$models[1] 
+    }
+    updatePickerInput(session, "detailedmodel",
+                      selected = selected_detail_model,
+                      choices = input$models)
+  })
+  
   output$sum <- renderTable({
     if(is.null(data())){return ()}
     summary(data())
