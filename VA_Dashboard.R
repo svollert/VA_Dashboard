@@ -8,6 +8,27 @@
 #devtools::install_github("d3treeR/d3treeR")
 #install.packages("gridSVG")
 
+
+# install.packages("bs4Dash")
+# install.packages("shinyWidgets")
+# install.packages("DT")
+# install.packages("plotly")
+# install.packages("RColorBrewer")
+# install.packages("scanstatistics")
+# install.packages("visNetwork")
+# install.packages("chorddiag")
+# install.packages("ggraph")
+# install.packages("randomcoloR")
+# install.packages("treemap")
+# install.packages("d3treeR")
+# install.packages("rsconnect")
+# install.packages("igraph")
+# install.packages("BBmisc")
+# install.packages("dplyr")
+# install.packages("DescTools")
+# install.packages("pals")
+
+
 library(shiny)
 library(bs4Dash)
 library(shinyWidgets)
