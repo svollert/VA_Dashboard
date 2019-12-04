@@ -406,14 +406,7 @@ server = function(input, output, session) {
     selected_models_missclassified_percentage_per_class <- cm/csumdivide
     selected_models_missclassified_percentage_per_class
   })
-  #  classnames <- reactive({
-  #    classnames <- input$classnames
-  #    if(input$classnamesheader == FALSE){return()}
-  #    if(input$classnamesheader == TRUE){
-  #      classnames <- colnames(data())
-  #      return(classnames)
-  #    }
-  #  })
+
   
   comparisondata <- reactive({
     if(is.null(data())){return ()}
@@ -1240,7 +1233,6 @@ server = function(input, output, session) {
   
   output$selected_models <- renderText(selected_models())
   
-  #output$models <- renderText(input$models)
   
   lorenzplot <- reactive({
     if(is.null(data())){return ()}
