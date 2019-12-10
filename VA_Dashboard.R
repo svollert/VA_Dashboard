@@ -837,10 +837,10 @@ server = function(input, output, session) {
   
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
-    if(input$valueswitch == TRUE){
+    if(input$valueswitch == TRUE){ # Hoverinfo für Prozentwerte mit Percentage
       cm <- round(selected_models_missclassified_percentage(),4)
       hover <- '<i>Percentage </i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'}
-    else{
+    else{ # Hoverinfo für absolutwerte mit Count
       cm <- selected_models_missclassified()
       hover <- '<i>Count </i>: %{r} <br><i>Miss. as </i>: %{theta}'}
     models <- input$models
@@ -866,13 +866,13 @@ server = function(input, output, session) {
   
   radarchartdeltaplot <- reactive({
     if(is.null(input$models)){return()}
-    if(input$valueswitch == TRUE){
+    if(input$valueswitch == TRUE){ # Hoverinfo für Prozentwerte mit Percentages
       cm <- comparisondata_percentage()
       mittel <- selected_models_missclassified_percentage()
       hover <- '<i>Percentage </i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'
       avghover <- '<i>Percentage</i>: %{r:.4p} <br><i>Miss. as </i>: %{theta}'
     }
-    else{
+    else{ # Hoverinfo für Absolutwerte mit Count
       cm <- comparisondata()
       mittel <- selected_models_missclassified()
       hover <- '<i>Count </i>: %{r} <br><i>Miss. as </i>: %{theta}'
