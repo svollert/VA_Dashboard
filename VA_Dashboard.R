@@ -1360,13 +1360,13 @@ server = function(input, output, session) {
     r  <- rep(1:length(input$models),each=chunk)[1:n]
     d <- split(data,r)
     d_miss <- split(missclassified_data, r)
-    e <- c()
-    f <- c()
+    sum_all <- c()
+    sum_miss <- c()
     for(i in seq(1, length(d))){
-      e <- c(e, sum(unlist(d[i])))
-      f <- c(f, sum(unlist(d_miss[i])))
+      sum_all <- c(sum_all, sum(unlist(d[i])))
+      sum_miss <- c(sum_miss, sum(unlist(d_miss[i])))
     }
-    acc <- (e-f)/e
+    acc <- (sum_all-sum_miss)/sum_all
     
     cm <- selected_models()
     cm_row <- rowSums(cm)
@@ -1383,11 +1383,11 @@ server = function(input, output, session) {
     
     x <- list(
       title = "Standard deviation of recalls",
-      titlefont = f
+      titlefont = FALSE
     )
     y <- list(
       title = "Overall Accuracy",
-      titlefont = f
+      titlefont = FALSE
     )
     modelnames <- factor(input$models, levels = input$models)
     p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>1-Std</i>: %{x:.4p}'))%>%
