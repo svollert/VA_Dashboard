@@ -392,20 +392,6 @@ server = function(input, output, session) {
     cm
   })
   
-  # Percentage der einzelnen Fehlklassifikationen summiert sich zu 1
-  selected_models_missclassified_percentage_per_class <- reactive({
-    if(is.null(modelnames)){return()}
-    cm <- selected_models_missclassified()
-    csum <- cm %>%
-      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
-      summarise_each(list(sum))
-    csum <- csum[,-1]
-    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
-    csumdivide[csumdivide == 0] <- 1
-    selected_models_missclassified_percentage_per_class <- cm/csumdivide
-    selected_models_missclassified_percentage_per_class
-  })
-
   
   comparisondata <- reactive({
     if(is.null(data())){return ()}
@@ -457,9 +443,6 @@ server = function(input, output, session) {
   })
   
   
-  output$test <- renderTable({
-    selected_models_missclassified_percentage_per_class()
-  })
   
   samples <- reactive({
     if(is.null(input$models)){return(0)}
