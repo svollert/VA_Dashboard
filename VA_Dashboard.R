@@ -275,27 +275,26 @@ ui = bs4DashPage(
 
 server = function(input, output, session) {
   data <- reactive({
-    file1 <- input$file
-    if(is.null(file1)){
-      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
+    if(!is.null(input$file)){ # Wenn ein File hochgeladen ist, lese es ein
+      return(read.table(file=input$file$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
     }
-    else{
-      read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    else{ # Wenn kein File hochgeladen ist, nehme standardfile im Github
+      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
     }
   })
   
-  plotcolors <- reactive({
+  plotcolors <- reactive({ # Farben für die Plots generieren, genug Farben für 52 Modelle/Klassen
     plotcolors <- c(alphabet(), alphabet2())
   })
   
-  modelnames <- reactive({
+  modelnames <- reactive({ # Legt die Modellnamen fest
     modelnames <- input$modelnames
-    if(is.null(modelnames) && is.null(data())){return()}
+    if(is.null(modelnames) && is.null(data())){return()} # Wenn es keine Daten und keine hochgeladenen Modellnamen gibt
     if(is.null(modelnames)){
-      models <- paste("Model", 1:(nrow(data())/ncol(data())))
+      models <- paste("Model", 1:(nrow(data())/ncol(data()))) # Wenn es keine hochgeladenen Modellnamen gibt generiere sie selbst
       return(models)
     }
-    models <- read.delim(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
+    models <- read.delim(file=modelnames$datapath, sep = input$sep2, header = FALSE, stringsAsFactors = FALSE) # Hochgeladene Modellnamen einlesen
     models <- unlist(models)
     models <- unname(models)
     models <- c(models)
@@ -1419,7 +1418,7 @@ server = function(input, output, session) {
   output$boxplot <- renderPlotly({boxplotplot()})
   
   acc_std_plot <- reactive({
-    if(is.null(input$models)){return()}
+    if(is.null(data()) | is.null(input$models)){return()}
     data <- selected_models()
     missclassified_data <- selected_models_missclassified()
     chunk <- ncol(data)
@@ -1464,6 +1463,28 @@ server = function(input, output, session) {
   
   output$acc_std_plot <- renderPlotly({acc_std_plot()})
   
+  output$table <- DT::renderDataTable({ # Gibt den gesamten Datensatz in einer Tabelle aus
+    if(is.null(data())){return ()}
+    selected_models()
+  }, filter = "top")
+  
+  ########################################################################
+  ############################ Observe Events ############################
+  
+  observeEvent(data(), {
+    available_classes <- classnames()
+    updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
+  })
+  
+  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
+    available_models <- modelnames()
+    #disabled_choices <- available_models %in% input$models
+    updatePickerInput(session, "models",
+                      choices = available_models,
+                      selected = available_models)
+  }, ignoreNULL = FALSE)
+  
+  
   observeEvent(modelnames(), {
     available_models <- modelnames()
     updatePickerInput(session, "models", choices = available_models, selected = available_models)
@@ -1485,18 +1506,6 @@ server = function(input, output, session) {
     updatePickerInput(session, "detailedmodel", choices = available_models, selected = available_models[1])
   })
   
-  observeEvent(data(), {
-    available_classes <- classnames()
-    updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
-  })
-  
-  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
-    available_models <- modelnames()
-    disabled_choices <- available_models %in% input$models
-    updatePickerInput(session, "models",
-                      choices = available_models,
-                      selected = available_models)
-  }, ignoreNULL = FALSE)
   
   observeEvent(input$models, {
     if(input$detailedmodel %in% input$models){
@@ -1510,21 +1519,7 @@ server = function(input, output, session) {
                       choices = input$models)
   })
   
-  output$sum <- renderTable({
-    if(is.null(data())){return ()}
-    summary(data())
-  })
-  
-  output$model_comparison_table <- DT::renderDataTable({
-    if(is.null(data())){return ()}
-    comparisondata()
-  })
-  
-  output$table <- DT::renderDataTable({
-    if(is.null(data())){return ()}
-    #data()[1:10,]
-    selected_models()
-  }, filter = "top")
+  ########################################################################
   
 }
 
