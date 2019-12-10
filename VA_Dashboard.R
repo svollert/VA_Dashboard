@@ -249,8 +249,8 @@ ui = bs4DashPage(
                                             fluidRow(bs4InfoBoxOutput("nomodels_box", width = 2),
                                                      bs4InfoBoxOutput("samples_box", width = 2),
                                                      bs4InfoBoxOutput("gini_all_prop", width = 2)),
-                                            fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE),
-                                                     bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = TRUE, closable = FALSE, maximizable = TRUE)),
+                                            fluidRow(bs4Card(title = "Lorenz Curve", plotlyOutput("lorenzcurve"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE),
+                                                     bs4Card(title = "Class Histogramm", plotlyOutput("histogram"), width = 6, collapsible = TRUE, collapsed = FALSE, closable = FALSE, maximizable = TRUE)),
                                             fluidRow(bs4Card(title = "Tabular Plot", DT::dataTableOutput(outputId = "table"), width = 12, closable = FALSE, collapsible = TRUE))),
                                  bs4TabItem(tabName = "information",
                                             h2("Dashboard Information"),
@@ -1340,8 +1340,11 @@ server = function(input, output, session) {
   boxplotplot <- reactive({
     if(is.null(input$models)){return()}
     results <- boxplot_calculation()
+    oldw <- getOption("warn")
+    options(warn = -1) # Warnungen ausschalten
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group", yaxis = list(title = "Score over all classes"), xaxis = list(tickvals = input$models, tickmode = "array"))
+    #options(warn = oldw) # Warnungen wieder einschalten
     p
   })
   
