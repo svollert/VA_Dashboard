@@ -481,10 +481,7 @@ server = function(input, output, session) {
     colChoice <- match(input$classes,options)
   })
   
-  
-  output$test <- renderTable({
-    selected_models_missclassified_percentage_per_class()
-  })
+
   
   samples <- reactive({
     if(is.null(input$models)){return(0)}
@@ -789,10 +786,6 @@ server = function(input, output, session) {
     #p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type = "sunburst", maxdepth = 3, sunburstcolors = c("#636efa","#EF553B","#00cc96","#ab63fa","#19d3f3","#e763fa", "#FECB52","#FFA15A","#FF6692","#B6E880"))
   })
   
-  output$sunburst_plot_single <- renderPlotly({
-    if(is.null(input$models)){return()}
-    p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type = "sunburst", maxdepth = 3)
-  })
   
   
   parcoordplot <- reactive({
@@ -1188,49 +1181,6 @@ server = function(input, output, session) {
   })
   output$sankey <- renderPlotly({sankeyplot()})
   
-  networkplot <- reactive({
-    return()
-    # cm <- selected_models_missclassified()
-    # 
-    # # Anzahl Klassen aus Konfusionsmatrix ermitteln
-    # no_classes <- ncol(cm)
-    # # Anzahl Modelle aus Konfusionsmatrix ermitteln
-    # no_models <- length(input$models)
-    # 
-    # # Nodes
-    # class_labels <- selected_classes()
-    # class_totals_missclassified <- colSums(cm)
-    # nodes <- as.data.frame(cbind(class_labels, cm_totals_missclassified), stringsAsFactors = FALSE)
-    # colnames(nodes) <- c("label","weight")
-    # rownames(nodes) <- c(1:no_classes)
-    # nodes$weight <- as.numeric(nodes$weight)
-    # 
-    # # Farben
-    # col <- distinctColorPalette(no_classes, altCol=T)
-    # col <- append(col, col)
-    # 
-    # # Einträge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
-    # colnames(cm) <- c(1:no_classes)
-    # rownames(cm_used_model) <- c(1:no_classes)
-    # cm_used_model <- data.matrix(cm_used_model)
-    # 
-    # # Gewichtete Kanten erstellen
-    # g <- graph.adjacency(cm_used_model, weighted=TRUE)
-    # edges <- get.data.frame(g)
-    # colnames(edges) <- c("to","from","weight")
-    # edges$to <- as.numeric(edges$to) + (ncol(selected_models_missclassified()) -1)
-    # edges$from <- as.numeric(edges$from) - 1
-    # edges <- transform(edges, color = col[from +1])
-    # edges <- edges[c("from", "to", "weight", "color")]
-    # edges <- transform(edges, label = paste("Class", to - (ncol(selected_models_missclassified()) -1)))
-    # #edges <- edges[order(edges$from),]   # Sortierung bringt nichts in Darstellung
-  })
-  
-  output$network_plot <- renderPlotly({networkplot()})
-  
-  output$sunburst_data2 <- renderTable(sunburst_data())
-  
-  output$selected_models <- renderText(selected_models())
   
   
   lorenzplot <- reactive({
@@ -1419,6 +1369,7 @@ server = function(input, output, session) {
   
   acc_std_plot <- reactive({
     if(is.null(data()) | is.null(input$models)){return()}
+    if(length(input$models) != nrow(data()) / ncol(data())){return()} # Damit bei Datenupload keine Fehlermeldung erscheint
     data <- selected_models()
     missclassified_data <- selected_models_missclassified()
     chunk <- ncol(data)
