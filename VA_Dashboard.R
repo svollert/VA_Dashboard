@@ -857,8 +857,6 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(plotcolors()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(plotcolors()[i])), hovertemplate = paste(hover))
     }
-    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
     p
   })
   
@@ -896,7 +894,6 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = c(rgb(180/255,0,0,0.5), rgb(0,200/255,0,0.5))[i], name = models[i], marker = list(symbol = "square", size = 8, color = c("Red", "Green")[i]), hovertemplate = paste(hover))
     }
-    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
     if(input$valueswitch == FALSE){
       mittel <- round(colSums(mittel)/length(input$models),0)
     }
@@ -1053,20 +1050,20 @@ server = function(input, output, session) {
       cm <- selected_models_missclassified_percentage()}
     else{
       cm <- selected_models_missclassified()}
-    cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
-    cm <- t(as.matrix(cm))
-    ticks <- round(max(colSums(cm))/40, 2)
+    cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),] # Passende Zeilen aufgrund der Modellselektion berechnen, alle Spalten nehmen
+    cm <- t(as.matrix(cm)) # Ausgewählte Daten transponieren
+    ticks <- round(max(colSums(cm))/40, 2) # Maximal 40 Ticks pro Klasse
     if(input$valueswitch == FALSE){
       ticks <- trunc(ticks / 10) * 10
-      if(ticks == 0){
+      if(ticks == 0){ # Wenn es weniger als 10 Fehlklassifizierte pro Klasse gibt -> Ticks auf 1 setzen
         ticks <- 1
       }
     }
-    if(ticks == 0.00 && input$valueswitch == TRUE){
+    if(ticks == 0.00 && input$valueswitch == TRUE){ # Wenn Ticks bei Prozentwerte zu klein, diese manuell auf 0.002 setzen
       ticks <- 0.002
     }
     rownames(cm) <- selected_classes()
-    colnames(cm) <- rownames(cm)
+    colnames(cm) <- rownames(cm) # Rownames und Colnames gleich setzen um Confusion von Klasse zu Klasse anzuzeigen
     if(input$valueswitch == TRUE){
       cm <- round(cm,4)
     }
