@@ -299,6 +299,7 @@ server = function(input, output, session) {
     models <- unlist(models)
     models <- unname(models)
     models <- c(models)
+    models
   })
   
   
@@ -314,6 +315,10 @@ server = function(input, output, session) {
                 multiple = TRUE)   
   })
   
+  
+  
+  # Die Confusionmatrix der ausgewählten Modelle und Klassen wird zurückgegeben (Absolutzahlen)
+  # Hierzu wird die Anzahl der notwendigen Zeilen und Spalten berechnet
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
     options <- modelnames()
@@ -332,19 +337,23 @@ server = function(input, output, session) {
     }
   })
   
+  # 
+  #
   selected_models_percentage <- reactive({
     if(is.null(modelnames)){return()}
-    cm <- selected_models()
-    csum <- cm %>%
-      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+    data <- selected_models()
+    csum <- data %>%
+      group_by(indx = gl(ceiling(nrow(data)/ncol(data)), ncol(data), nrow(data))) %>%
       summarise_each(list(sum))
     csum <- csum[,-1]
-    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(data)), ]
     csumdivide[csumdivide == 0] <- 1
-    selected_models_percentage <- cm/csumdivide
-    selected_models_percentage
+    data <- data/csumdivide
+    data
   })
   
+  # Die Confusionmatrix für ein ausgewähltes Modell wird zurückgegeben 
+  # Wird später für die Detailansicht eines Modells verwendet
   selected_models_single <- reactive({
     if(is.null(modelnames)){return()}
     model <- match(input$detailedmodel ,modelnames())
@@ -353,6 +362,7 @@ server = function(input, output, session) {
     data
   })
   
+  # Die Confusionmatrix für ausgewählte Modelle wird zurückgegeben, wobei die Diagonalelemente 0 gesetzt wurden
   selected_models_missclassified <- reactive({
     if(is.null(modelnames)){return()}
     options <- modelnames()
@@ -360,20 +370,21 @@ server = function(input, output, session) {
     rows <- as.numeric(rows) * ncol(data())
     rows <- c(rep(rows, each = ncol(data())) - 0:(ncol(data()) - 1))
     rows <- sort(rows)
-    sel_models <- data()[rows,]
-    a <- c(1:nrow(sel_models))
-    b <- rep(1:ncol(sel_models), nrow(sel_models) / ncol(sel_models))
+    data <- data()[rows,]
+    a <- c(1:nrow(data))
+    b <- rep(1:ncol(data), nrow(data) / ncol(data))
     d <- cbind(a,b)
-    sel_models[d] <- 0
+    data[d] <- 0
     if(!is.null(input$classes)){
-      delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(sel_models)-1,ncol(sel_models))
-      sel_models[-delseq, -classdelete()]
+      delseq <- rep(classdelete(), each = length(input$models)) + seq(0,nrow(data)-1,ncol(data))
+      data[-delseq, -classdelete()]
     }
     else{
-      sel_models
+      data
     }
   })
   
+  # Die Confusionmatrix für ein ausgewähltes Modell wird zurückgegeben, wobei die Diagonalelemente 0 gesetzt wurden
   selected_models_missclassified_single <- reactive({
     if(is.null(modelnames)){return()}
     model <- match(input$detailedmodel ,modelnames())
@@ -385,37 +396,40 @@ server = function(input, output, session) {
   # Nur die wirklichen Prozente der Fehlklassifizierten
   selected_models_missclassified_percentage <- reactive({
     if(is.null(modelnames)){return()}
-    cm <- selected_models_percentage()
-    a <- c(1:nrow(cm))
-    b <- rep(1:ncol(cm), nrow(cm) / ncol(cm))
+    data <- selected_models_percentage()
+    a <- c(1:nrow(data))
+    b <- rep(1:ncol(data), nrow(data) / ncol(data))
     d <- cbind(a,b)
-    cm[d] <- 0.0
-    cm
+    data[d] <- 0.0
+    data
   })
   
-  # Percentage der einzelnen Fehlklassifikationen summiert sich zu 1
+  # Die Confusionmatrix von ausgewählten Modellen wird zurückgegeben, wobei die summierte prozentuale Fehlklassifizierung pro Spalte und Modell immer 1 ergeben muss
+  # Falls eine Spaltensumme 0 ergibt, wird künstlich eine 1 für csumdivide eingeführt, um eine Division durch 0 zu verhindern
   selected_models_missclassified_percentage_per_class <- reactive({
     if(is.null(modelnames)){return()}
-    cm <- selected_models_missclassified()
-    csum <- cm %>%
-      group_by(indx = gl(ceiling(nrow(cm)/ncol(cm)), ncol(cm), nrow(cm))) %>%
+    data <- selected_models_missclassified()
+    csum <- data %>%
+      group_by(indx = gl(ceiling(nrow(data)/ncol(data)), ncol(data), nrow(data))) %>%
       summarise_each(list(sum))
     csum <- csum[,-1]
-    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(cm)), ]
+    csumdivide <- csum[rep(seq_len(nrow(csum)), each = ncol(data)), ]
     csumdivide[csumdivide == 0] <- 1
-    selected_models_missclassified_percentage_per_class <- cm/csumdivide
-    selected_models_missclassified_percentage_per_class
+    data <- data/csumdivide
+    data
   })
 
-  
+#-------------------------------------------------------------------------------------------------------------------------------------------
+  # Die Confusionmatrix von zwei Modellen wird zurückgegeben, um diese später vergleichen zu können (Absolutzahlen)
+  # Hierzu werden die dazugehörigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschränkt wird
   comparisondata <- reactive({
     if(is.null(data())){return ()}
     options <- modelnames()
-    rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
+    rows_d <- match(input$defaultmodel, options) 
     start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
     end <- rows_d*ncol(selected_models())
     rows_d <- seq(start, end)
-    rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
+    rows_c <- match(input$comparingmodel, options) 
     start <- (rows_c*ncol(selected_models())) - (ncol(selected_models())) + 1
     end <- rows_c*ncol(selected_models())
     rows_c <- seq(start, end)
@@ -425,14 +439,16 @@ server = function(input, output, session) {
     data
   })
   
+  # Die Confusionmatrix von zwei Modellen wird zurückgegeben, um diese später vergleichen zu können (Prozentzahlen)
+  # Hierzu werden die dazugehörigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschränkt wird  
   comparisondata_percentage <- reactive({
     if(is.null(data())){return ()}
     options <- modelnames()
-    rows_d <- match(input$defaultmodel, options) # rows_d = rows_default
+    rows_d <- match(input$defaultmodel, options) 
     start <- (rows_d*ncol(selected_models_percentage())) - (ncol(selected_models_percentage())) + 1
     end <- rows_d*ncol(selected_models_percentage())
     rows_d <- seq(start, end)
-    rows_c <- match(input$comparingmodel, options) # rows_c = rows_compare
+    rows_c <- match(input$comparingmodel, options) 
     start <- (rows_c*ncol(selected_models_percentage())) - (ncol(selected_models_percentage())) + 1
     end <- rows_c*ncol(selected_models_percentage())
     rows_c <- seq(start, end)
@@ -441,32 +457,7 @@ server = function(input, output, session) {
     data <- rbind(data_d, data_c)
     data
   })
-  
-  
-  classnames <- reactive({
-    classnames <- colnames(data())
-  })
-  
-  selected_classes <- reactive({
-    selected_classes <- colnames(selected_models())
-    selected_classes
-  })
-  
-  classdelete <- reactive({
-    options <- classnames()
-    colChoice <- match(input$classes,options)
-  })
-  
-  
-  output$test <- renderTable({
-    selected_models_missclassified_percentage_per_class()
-  })
-  
-  samples <- reactive({
-    if(is.null(input$models)){return(0)}
-    samples <- as.integer(sum(selected_models()) / length(input$models))
-    samples
-  })
+#------------------------------------------------------------------------------------------------------------------------------------------- 
   
   classnames <- reactive({
     classnames <- colnames(data())
@@ -493,73 +484,7 @@ server = function(input, output, session) {
     samples
   })
   
-  sunburst_data <- reactive({
-    if(is.null(data())){return()}
-    
-    if (input$valueswitch == TRUE) {
-      # Prozent
-      sunburst_modelle <- selected_models_missclassified_percentage()
-    } else {
-      # Absolut
-      sunburst_modelle <- selected_models_missclassified()
-    }
-    
-    # Labels festlegen
-    labels <- "All"
-    labels <- c(labels, input$models)
-    classes <- paste(rep(input$models, each=ncol(sunburst_modelle)), selected_classes())
-    labels <- c(labels, classes)
-    
-    # Eltern festlegen
-    parents <- " "
-    parents <- c(parents, rep("All", length(input$models))) #nrow(sunburst_modelle) / ncol(sunburst_modelle)))
-    parents <- c(parents, rep(input$models, each = ncol(sunburst_modelle)))
-    
-    # Hilfsvariable um über Klassennamen zu verfügen
-    vec_classes <- selected_classes()
-    
-    for (i in seq(1, length(input$models))) {
-      for (j in seq(1, ncol(sunburst_modelle))) {
-        for (k in seq(1, ncol(sunburst_modelle))) {
-          if (sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j] != 0) {
-            labels <- c(labels, paste(input$models[i], vec_classes[j], vec_classes[k]))
-            parents <- c(parents, paste(input$models[i], vec_classes[j]))
-          }
-        }
-      }
-    }
-    
-    # Schleife für Anzahl Fehlklassifizierungen über alle Modelle
-    values <- sum(sunburst_modelle)
-    # Schleife für Anzahl Fehlklassifizierungen je Modell
-    for (i in seq(1, length(input$models))) {
-      values <- c(values, sum(colSums(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), ])))
-    }
-    
-    # Schleife für Anzahl Fehlklassifizierungen je Modell und Klasse
-    for (i in seq(1, length(input$models))) {
-      for (j in seq(1, ncol(sunburst_modelle))) {
-        values <- c(values, sum(sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)):(i*ncol(sunburst_modelle)), j]))
-      }
-    }
-    
-    # Schleife für Anzahl Fehlklassifizierungen je Classconfusion
-    for (i in seq(1, length(input$models))) {
-      for (j in seq(1, ncol(sunburst_modelle))) {
-        for (k in seq(1, ncol(sunburst_modelle))) {
-          if (sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j] != 0) {
-            values <- c(values, sunburst_modelle[((i*ncol(sunburst_modelle))-(ncol(sunburst_modelle)-1)+(k-1)),j])
-          }
-        }
-      }
-    }
-    
-    sunburst_data <- as.data.frame(cbind(parents, labels, values))
-    sunburst_data
-  })
-  
-  
-  
+#--------------------------Ab hier Metriken für Infoboxen---------------------------------------------------------------
   output$samples_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Number of Samples",
@@ -777,45 +702,87 @@ server = function(input, output, session) {
     )
   })
   
+#--------------------------Ab hier Plots---------------------------------------------------------------
+  # Die Daten werden für den Sunburstplot vorbereitet (insgesamt gibt es vier Stufen/Ebenen im Sunburst, wobei jede Ebene feingranularer wird)
+  # Ziel ist es ein Dataframe zu erstellen, indem Parents, Labels und Values hinterlegt sind
+  sunburst_data <- reactive({
+    if(is.null(data())){return()}
+    
+    if (input$valueswitch == TRUE) {
+      data <- selected_models_missclassified_percentage()
+    } else {
+      data <- selected_models_missclassified()
+    }
+    
+    # Labels und Parents für die ersten drei Stufen festlegen
+    labels <- "All"
+    parents <- " "
+    labels <- c(labels, input$models)
+    parents <- c(parents, rep("All", length(input$models)))
+    classes <- paste(rep(input$models, each=ncol(data)), selected_classes())
+    labels <- c(labels, classes)
+    parents <- c(parents, rep(input$models, each = ncol(data)))
+    
+    # Values für die ersten drei Stufen festlegen
+    values <- sum(data) # Anzahl Fehlklassifizierungen über alle Modelle
+
+    for (i in seq(1, length(input$models))) {
+      values <- c(values, sum(colSums(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), ]))) # Anzahl Fehlklassifizierungen je Modell
+    }
+    
+    for (i in seq(1, length(input$models))) {
+      for (j in seq(1, ncol(data))) {
+        values <- c(values, sum(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), j])) # Anzahl Fehlklassifizierungen je Modell und Klasse
+      }
+    }
+    
+    # Labels, Parents und Values für die vierte Stufe festlegen
+    vec_classes <- selected_classes()
+    for (i in seq(1, length(input$models))) {
+      for (j in seq(1, ncol(data))) {
+        for (k in seq(1, ncol(data))) {
+          if (data[((i*ncol(data))-(ncol(data)-1)+(k-1)),j] != 0) {
+            labels <- c(labels, paste(input$models[i], vec_classes[j], vec_classes[k]))
+            parents <- c(parents, paste(input$models[i], vec_classes[j]))
+            values <- c(values, data[((i*ncol(data))-(ncol(data)-1)+(k-1)),j]) # Anzahl Fehlklassifizierungen je Classconfusion
+          }
+        }
+      }
+    }
+    
+    data <- as.data.frame(cbind(parents, labels, values))
+    data
+  })  
   
+  # Ausgabe Sunburstplot, wobei die zuvor erstellten Sunburstdaten (Labels, Parents, Values) verwendet werden
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models)){return()}
     data <- sunburst_data()
-    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) #color = ~parents, colors = ~parents)
-    #add_trace(labels = ~labels2, parents = ~parents, values = ~values, type="sunburst", maxdepth=3, color = ~parents) %>%
-    #layout(colorway = c('#f3cec9', '#e7a4b6', '#cd7eaf', '#a262a9', '#6f4d96', '#3d3b72', '#182844'))
-    
+    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
     p
-    
-    #p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type = "sunburst", maxdepth = 3, sunburstcolors = c("#636efa","#EF553B","#00cc96","#ab63fa","#19d3f3","#e763fa", "#FECB52","#FFA15A","#FF6692","#B6E880"))
   })
   
-  output$sunburst_plot_single <- renderPlotly({
-    if(is.null(input$models)){return()}
-    p <- plot_ly(sunburst_data(), labels = ~labels2, parents = ~parents, values = ~values, type = "sunburst", maxdepth = 3)
-  })
-  
-  
+  # Die Daten werden für den Parallelcoordinateplot vorbereitet
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
+    
     if(input$valueswitch == TRUE){
-      parcoord_data <- selected_models_missclassified_percentage()
+      data <- selected_models_missclassified_percentage()
       axisformat <- '.3f'}
     else{
-      parcoord_data <- selected_models_missclassified()
+      data <- selected_models_missclassified()
       axisformat <- 'f'}
-    #models <- input$models
+    
     models <- match(input$models,modelnames())
     classes <- selected_classes()
-    #sums <- colSums(matrix(t(parcoord_data), nrow = ncol(parcoord_data)))
-    cm2=data.frame(matrix(ncol=0,nrow=ncol(parcoord_data)))
-    for(i in seq(1, nrow(parcoord_data), ncol(parcoord_data))){
-      cm2 <- cbind(cm2, parcoord_data[i:(i+ncol(parcoord_data)-1), ])
+    cm <- data.frame(matrix(ncol=0,nrow=ncol(data)))
+    for(i in seq(1, nrow(data), ncol(data))){
+      cm <- cbind(cm, data[i:(i+ncol(data)-1), ])
     }
-    sums <- t(matrix(colSums(cm2), nrow = nrow(cm2)))
+    sums <- t(matrix(colSums(cm), nrow = nrow(cm)))
     max_missclassified <- max(sums)
-    parcoord_data <- as.data.frame(cbind(models, sums))
-    colnames(parcoord_data) <- c("Models", classes)
+    data <- as.data.frame(cbind(models, sums))
+    colnames(data) <- c("Models", classes)
     colr <- unname(plotcolors())
     
     #start_statement = "list("
@@ -847,8 +814,7 @@ server = function(input, output, session) {
     
     loop_color = paste(loop_color, collapse = " ")
     
-    
-    p <- parcoord_data %>%
+    p <- data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
                           colorscale = eval(parse(text = loop_color))),
@@ -856,10 +822,11 @@ server = function(input, output, session) {
       )
     p
   })
+  
+  # Ausgabe Parallelcoordinates, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$parcoord <- renderPlotly({parcoordplot()})
   
-  
-  
+  # Die Daten werden für das Radarchart vorbereitet
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
@@ -882,13 +849,13 @@ server = function(input, output, session) {
       k = j+1
       p<-add_trace(p,r = sums[(j-ncol(cm)+1):j], mode = "markers", theta = classes, fill = 'toself', fillcolor = adjustcolor(unname(plotcolors()[i]), alpha.f = 0.5), name = input$models[i], marker = list(symbol = "square", size = 8, color = unname(plotcolors()[i])), hovertemplate = paste(hover))
     }
-    #mittel <- colMeans(matrix(sums, ncol = ncol(cm), byrow = TRUE))
-    #p <- add_trace(p, r = mittel, mode = "markers", theta = classes, name = "AVG", marker = list(symbol = "square", size = 8))
     p
   })
   
+  # Ausgabe Radarchart, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$radarchart <- renderPlotly({radarchartplot()})
   
+  # Die Daten werden für das Delta-Radarchart vorbereitet
   radarchartdeltaplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
@@ -932,8 +899,10 @@ server = function(input, output, session) {
     p
   })
   
+  # Ausgabe Delta-Radarchart, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$radarchartdeltaplot <- renderPlotly({radarchartdeltaplot()})
   
+  # Die Daten werden für die Heatmap vorbereitet
   heatmapplot <- reactive({
     if(length(input$models) == 0){return()}
     model <- match(input$detailedmodel,modelnames())
@@ -981,7 +950,7 @@ server = function(input, output, session) {
       }
     }
     
-    # Farbskala
+    # Farbskala mit Abstufungen von Blau
     col <- brewer.pal(n = 9, name = 'Blues')
     
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y}<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
@@ -990,9 +959,10 @@ server = function(input, output, session) {
     p
   })
   
+  # Ausgabe Heatmap, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$heatmap <- renderPlotly({heatmapplot()})
   
-  
+  # Die Daten werden für das Delta-Heatmap vorbereitet
   heatmapplot_comparison <- reactive({
     if(is.null(input$models)) {return()}
     
@@ -1005,8 +975,6 @@ server = function(input, output, session) {
     classes <- selected_classes()
     rownames(data) <- c(classes, paste(classes, classes))
     colnames(data) <- rev(classes)
-    #new_data <- data.frame(lapply(data, as.character), stringsAsFactors=FALSE)
-    #new_data <- as.matrix(new_data)
     norm_data <- as.matrix(data)
     data_def <- as.matrix(norm_data[1:ncol(data),])
     data_comp <- as.matrix(norm_data[(ncol(data)+1):(2*ncol(data)),])
@@ -1051,8 +1019,7 @@ server = function(input, output, session) {
       }
     }
     
-    # Farbskala
-    
+    # Farbskala mit sechs Abstufungen von Rot und sechs Abstufungen von Grün
     col_red <- rev(brewer.pal(n = 9, name = 'Reds'))
     col_red <- col_red[-(7:9)]
     col_white <- "#FFFFFF"
@@ -1067,8 +1034,7 @@ server = function(input, output, session) {
     p    
   })
   
-  
-  
+  # Ausgabe Delta-Heatmap, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$heatmap_comparison <- renderPlotly({heatmapplot_comparison()})
   
   chorddiagrammplot <- reactive({
