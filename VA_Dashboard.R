@@ -756,7 +756,7 @@ server = function(input, output, session) {
   
   # Ausgabe Sunburstplot, wobei die zuvor erstellten Sunburstdaten (Labels, Parents, Values) verwendet werden
   output$sunburst_plot <- renderPlotly({
-    if(is.null(input$models)){return()}
+    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
     data <- sunburst_data()
     p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
     p
@@ -1385,7 +1385,7 @@ server = function(input, output, session) {
   output$boxplot <- renderPlotly({boxplotplot()})
   
   acc_std_plot <- reactive({
-    if(is.null(input$models)){return()}
+    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
     data <- selected_models()
     missclassified_data <- selected_models_missclassified()
     chunk <- ncol(data)
