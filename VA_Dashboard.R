@@ -1,27 +1,36 @@
 # treemap
 # d3treeR
 
-#devtools::install_github("mattflor/chorddiag")
-#install.packages("ggraph")
-#install.packages("randomcoloR")
-#install.packages("visNetwork")
-#devtools::install_github("d3treeR/d3treeR")
-#install.packages("gridSVG")
+#Warning in install.packages :
+#package 'chorddiag' is not available (for R version 3.6.1)
+#Warning in install.packages :
+#package 'd3treeR' is not available (for R version 3.6.1)
+
+# install.packages("devtools")
+# devtools::install_github("mattflor/chorddiag")
+# install.packages("ggraph")
+# install.packages("randomcoloR")
+# install.packages("visNetwork")
+# devtools::install_github("d3treeR/d3treeR")
+# install.packages("gridSVG")
 
 
 # install.packages("bs4Dash")
 # install.packages("shinyWidgets")
 # install.packages("DT")
 # install.packages("plotly")
+# 
 # install.packages("RColorBrewer")
 # install.packages("scanstatistics")
 # install.packages("visNetwork")
 # install.packages("chorddiag")
+# 
 # install.packages("ggraph")
 # install.packages("randomcoloR")
 # install.packages("treemap")
 # install.packages("d3treeR")
 # install.packages("rsconnect")
+# 
 # install.packages("igraph")
 # install.packages("BBmisc")
 # install.packages("dplyr")
@@ -316,9 +325,8 @@ server = function(input, output, session) {
   })
   
   
-  
-  # Die Confusionmatrix der ausgewählten Modelle und Klassen wird zurückgegeben (Absolutzahlen)
-  # Hierzu wird die Anzahl der notwendigen Zeilen und Spalten berechnet
+# Die Confusionmatrix der ausgewählten Modelle und Klassen wird zurueckgegeben (Absolutzahlen)
+# Hierzu wird die Anzahl der notwendigen Zeilen und Spalten berechnet
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
     options <- modelnames()
