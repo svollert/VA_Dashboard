@@ -73,7 +73,7 @@ ui = bs4DashPage(
                              labelText = "!",
                              status = "primary",
                              bs4DropdownMenuItem(
-                               text = HTML("You can collapse the sidebars <br/> by clicking on the icons")
+                               message = HTML("You can collapse the sidebars <br/> by clicking on the icons")
                              )
                            ))),
   
@@ -97,6 +97,7 @@ ui = bs4DashPage(
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
                                  h6(helpText("Choose the file")),
                                  h6(helpText(HTML("Labels = Columns <br> Predictions = Rows"))),
+                                 switchInput("column_row_switch", label=NULL, value=TRUE, onLabel = "Columns", offLabel = "Rows", onStatus = "primary", offStatus = NULL),
                                  fileInput("file", accept = c(".csv"), label = NULL, buttonLabel = "Search"),
                                  h6(HTML("<hr>")),
                                  h5(helpText("Upload model descriptions")),
@@ -289,8 +290,27 @@ server = function(input, output, session) {
       return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
     }
     else{
-      read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+      data <- read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
+    if(input$column_row_switch == FALSE){ # Wenn Switch auf Zeile steht
+        print("Zeile")
+        rows = nrow(data)
+        cols = ncol(data)
+        models = rows/cols
+        
+        
+        start = seq(1, rows, models)
+        end = seq(cols, rows, models)
+        
+        
+        for(i in seq(1,models)){ # FÃ¼r jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
+          data[start[i]:end[i],] <- t(data[start[i]:end[i],])}
+      }
+    else{
+      print("Spalte")
+    }
+      data
+    
   })
   
   plotcolors <- reactive({
@@ -325,7 +345,7 @@ server = function(input, output, session) {
   })
   
   
-# Die Confusionmatrix der ausgewählten Modelle und Klassen wird zurueckgegeben (Absolutzahlen)
+# Die Confusionmatrix der ausgew?hlten Modelle und Klassen wird zurueckgegeben (Absolutzahlen)
 # Hierzu wird die Anzahl der notwendigen Zeilen und Spalten berechnet
   selected_models <- reactive({
     if(is.null(modelnames)){return()}
@@ -360,8 +380,8 @@ server = function(input, output, session) {
     data
   })
   
-  # Die Confusionmatrix für ein ausgewähltes Modell wird zurückgegeben 
-  # Wird später für die Detailansicht eines Modells verwendet
+  # Die Confusionmatrix f?r ein ausgew?hltes Modell wird zur?ckgegeben 
+  # Wird sp?ter f?r die Detailansicht eines Modells verwendet
   selected_models_single <- reactive({
     if(is.null(modelnames)){return()}
     model <- match(input$detailedmodel ,modelnames())
@@ -370,7 +390,7 @@ server = function(input, output, session) {
     data
   })
   
-  # Die Confusionmatrix für ausgewählte Modelle wird zurückgegeben, wobei die Diagonalelemente 0 gesetzt wurden
+  # Die Confusionmatrix f?r ausgew?hlte Modelle wird zur?ckgegeben, wobei die Diagonalelemente 0 gesetzt wurden
   selected_models_missclassified <- reactive({
     if(is.null(modelnames)){return()}
     options <- modelnames()
@@ -392,7 +412,7 @@ server = function(input, output, session) {
     }
   })
   
-  # Die Confusionmatrix für ein ausgewähltes Modell wird zurückgegeben, wobei die Diagonalelemente 0 gesetzt wurden
+  # Die Confusionmatrix f?r ein ausgew?hltes Modell wird zur?ckgegeben, wobei die Diagonalelemente 0 gesetzt wurden
   selected_models_missclassified_single <- reactive({
     if(is.null(modelnames)){return()}
     model <- match(input$detailedmodel ,modelnames())
@@ -412,8 +432,8 @@ server = function(input, output, session) {
     data
   })
   
-  # Die Confusionmatrix von ausgewählten Modellen wird zurückgegeben, wobei die summierte prozentuale Fehlklassifizierung pro Spalte und Modell immer 1 ergeben muss
-  # Falls eine Spaltensumme 0 ergibt, wird künstlich eine 1 für csumdivide eingeführt, um eine Division durch 0 zu verhindern
+  # Die Confusionmatrix von ausgew?hlten Modellen wird zur?ckgegeben, wobei die summierte prozentuale Fehlklassifizierung pro Spalte und Modell immer 1 ergeben muss
+  # Falls eine Spaltensumme 0 ergibt, wird k?nstlich eine 1 f?r csumdivide eingef?hrt, um eine Division durch 0 zu verhindern
   selected_models_missclassified_percentage_per_class <- reactive({
     if(is.null(modelnames)){return()}
     data <- selected_models_missclassified()
@@ -428,8 +448,8 @@ server = function(input, output, session) {
   })
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-  # Die Confusionmatrix von zwei Modellen wird zurückgegeben, um diese später vergleichen zu können (Absolutzahlen)
-  # Hierzu werden die dazugehörigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschränkt wird
+  # Die Confusionmatrix von zwei Modellen wird zur?ckgegeben, um diese sp?ter vergleichen zu k?nnen (Absolutzahlen)
+  # Hierzu werden die dazugeh?rigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschr?nkt wird
   comparisondata <- reactive({
     if(is.null(data())){return ()}
     options <- modelnames()
@@ -447,8 +467,8 @@ server = function(input, output, session) {
     data
   })
   
-  # Die Confusionmatrix von zwei Modellen wird zurückgegeben, um diese später vergleichen zu können (Prozentzahlen)
-  # Hierzu werden die dazugehörigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschränkt wird  
+  # Die Confusionmatrix von zwei Modellen wird zur?ckgegeben, um diese sp?ter vergleichen zu k?nnen (Prozentzahlen)
+  # Hierzu werden die dazugeh?rigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschr?nkt wird  
   comparisondata_percentage <- reactive({
     if(is.null(data())){return ()}
     options <- modelnames()
@@ -492,7 +512,7 @@ server = function(input, output, session) {
     samples
   })
   
-#--------------------------Ab hier Metriken für Infoboxen---------------------------------------------------------------
+#--------------------------Ab hier Metriken f?r Infoboxen---------------------------------------------------------------
   output$samples_box <- renderbs4InfoBox({
     bs4InfoBox(
       title = "Number of Samples",
@@ -711,7 +731,7 @@ server = function(input, output, session) {
   })
   
 #--------------------------Ab hier Plots---------------------------------------------------------------
-  # Die Daten werden für den Sunburstplot vorbereitet (insgesamt gibt es vier Stufen/Ebenen im Sunburst, wobei jede Ebene feingranularer wird)
+  # Die Daten werden f?r den Sunburstplot vorbereitet (insgesamt gibt es vier Stufen/Ebenen im Sunburst, wobei jede Ebene feingranularer wird)
   # Ziel ist es ein Dataframe zu erstellen, indem Parents, Labels und Values hinterlegt sind
   sunburst_data <- reactive({
     if(is.null(data())){return()}
@@ -722,7 +742,7 @@ server = function(input, output, session) {
       data <- selected_models_missclassified()
     }
     
-    # Labels und Parents für die ersten drei Stufen festlegen
+    # Labels und Parents f?r die ersten drei Stufen festlegen
     labels <- "All"
     parents <- " "
     labels <- c(labels, input$models)
@@ -731,8 +751,8 @@ server = function(input, output, session) {
     labels <- c(labels, classes)
     parents <- c(parents, rep(input$models, each = ncol(data)))
     
-    # Values für die ersten drei Stufen festlegen
-    values <- sum(data) # Anzahl Fehlklassifizierungen über alle Modelle
+    # Values f?r die ersten drei Stufen festlegen
+    values <- sum(data) # Anzahl Fehlklassifizierungen ?ber alle Modelle
 
     for (i in seq(1, length(input$models))) {
       values <- c(values, sum(colSums(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), ]))) # Anzahl Fehlklassifizierungen je Modell
@@ -744,7 +764,7 @@ server = function(input, output, session) {
       }
     }
     
-    # Labels, Parents und Values für die vierte Stufe festlegen
+    # Labels, Parents und Values f?r die vierte Stufe festlegen
     vec_classes <- selected_classes()
     for (i in seq(1, length(input$models))) {
       for (j in seq(1, ncol(data))) {
@@ -770,7 +790,7 @@ server = function(input, output, session) {
     p
   })
   
-  # Die Daten werden für den Parallelcoordinateplot vorbereitet
+  # Die Daten werden f?r den Parallelcoordinateplot vorbereitet
   parcoordplot <- reactive({
     if(is.null(input$models)){return()}
     
@@ -834,7 +854,7 @@ server = function(input, output, session) {
   # Ausgabe Parallelcoordinates, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$parcoord <- renderPlotly({parcoordplot()})
   
-  # Die Daten werden für das Radarchart vorbereitet
+  # Die Daten werden f?r das Radarchart vorbereitet
   radarchartplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
@@ -863,7 +883,7 @@ server = function(input, output, session) {
   # Ausgabe Radarchart, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$radarchart <- renderPlotly({radarchartplot()})
   
-  # Die Daten werden für das Delta-Radarchart vorbereitet
+  # Die Daten werden f?r das Delta-Radarchart vorbereitet
   radarchartdeltaplot <- reactive({
     if(is.null(input$models)){return()}
     if(input$valueswitch == TRUE){
@@ -910,7 +930,7 @@ server = function(input, output, session) {
   # Ausgabe Delta-Radarchart, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$radarchartdeltaplot <- renderPlotly({radarchartdeltaplot()})
   
-  # Die Daten werden für die Heatmap vorbereitet
+  # Die Daten werden f?r die Heatmap vorbereitet
   heatmapplot <- reactive({
     if(length(input$models) == 0){return()}
     model <- match(input$detailedmodel,modelnames())
@@ -927,8 +947,8 @@ server = function(input, output, session) {
     norm_data <- as.matrix(data)
     max_diag <- max(diag(norm_data)) # Finde Max-Wert auf Diagonalen
     min_diag <- min(diag(norm_data)) # Finde Min-Wert auf Diagonalen
-    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert außerhalb der Diagonalen
-    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert außerhalb der Diagonalen
+    max_not_diag <- max(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Max-Wert au?erhalb der Diagonalen
+    min_not_diag <- min(c(data[upper.tri(norm_data)],data[lower.tri(norm_data)])) # Finde Min-Wert au?erhalb der Diagonalen
     if ((0.8*min_diag) > max_not_diag) {
       diag(norm_data) <- ((diag(norm_data)-min_diag)/(max_diag - min_diag))
       norm_data[upper.tri(norm_data)] <- (norm_data[upper.tri(norm_data)] - min_not_diag) / (max_not_diag - min_not_diag) - 1
@@ -970,7 +990,7 @@ server = function(input, output, session) {
   # Ausgabe Heatmap, wobei der zuvor erstellten Plotlyplot verwendet wird
   output$heatmap <- renderPlotly({heatmapplot()})
   
-  # Die Daten werden für das Delta-Heatmap vorbereitet
+  # Die Daten werden f?r das Delta-Heatmap vorbereitet
   heatmapplot_comparison <- reactive({
     if(is.null(input$models)) {return()}
     
@@ -1027,7 +1047,7 @@ server = function(input, output, session) {
       }
     }
     
-    # Farbskala mit sechs Abstufungen von Rot und sechs Abstufungen von Grün
+    # Farbskala mit sechs Abstufungen von Rot und sechs Abstufungen von Gr?n
     col_red <- rev(brewer.pal(n = 9, name = 'Reds'))
     col_red <- col_red[-(7:9)]
     col_white <- "#FFFFFF"
@@ -1085,7 +1105,7 @@ server = function(input, output, session) {
     # Anzahl Modelle aus Konfusionsmatrix ermitteln
     no_models <- length(input$models)
     
-    cm_used_model <- selected_models() # 1 ist abhängig vom ausgewÃ¤hlten Modell
+    cm_used_model <- selected_models() # 1 ist abh?ngig vom ausgewÃƒÂ¤hlten Modell
     cm_used_model <- cm_used_model[(model*ncol(cm_used_model)-(ncol(cm_used_model)-1)):(model*ncol(cm_used_model)),]
     
     id <- c(1:(2*no_classes))
@@ -1106,7 +1126,7 @@ server = function(input, output, session) {
     nodes$id <- as.numeric(nodes$id)
     nodes$weight <- as.numeric(nodes$weight)
     
-    # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     diag(cm_used_model) <- 0
     colnames(cm_used_model) <- c(1:no_classes)
     rownames(cm_used_model) <- c(1:no_classes)
@@ -1184,7 +1204,7 @@ server = function(input, output, session) {
     # col <- distinctColorPalette(no_classes, altCol=T)
     # col <- append(col, col)
     # 
-    # # EintrÃ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
+    # # EintrÃƒÂ¤ge auf der Diagonalen der Konfusionsmatrix werden auf 0 gesetzt
     # colnames(cm) <- c(1:no_classes)
     # rownames(cm_used_model) <- c(1:no_classes)
     # cm_used_model <- data.matrix(cm_used_model)
@@ -1464,7 +1484,7 @@ server = function(input, output, session) {
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
   
-  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
+  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgew?hlt
     available_models <- modelnames()
     disabled_choices <- available_models %in% input$models
     updatePickerInput(session, "models",
