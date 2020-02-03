@@ -96,7 +96,7 @@ ui = bs4DashPage(
                                  h6(helpText("Choose the seperator")),
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
                                  h6(helpText("Choose the file")),
-                                 h6(helpText(HTML("Labels = Columns <br> Predictions = Rows"))),
+                                 h6(helpText(HTML("True Labels in Columns <br> or in Rows?"))),
                                  switchInput("column_row_switch", label=NULL, value=TRUE, onLabel = "Columns", offLabel = "Rows", onStatus = "primary", offStatus = NULL),
                                  fileInput("file", accept = c(".csv"), label = NULL, buttonLabel = "Search"),
                                  h6(HTML("<hr>")),
