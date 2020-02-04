@@ -298,10 +298,10 @@ server = function(input, output, session) {
         cols = ncol(data)
         models = rows/cols
         
-        
-        start = seq(1, rows, models)
-        end = seq(cols, rows, models)
-        
+        start = seq(1, rows, cols)
+        end = seq(cols, rows, cols)
+        print(start)
+        print(end)
         
         for(i in seq(1,models)){ # Für jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
           data[start[i]:end[i],] <- t(data[start[i]:end[i],])}
