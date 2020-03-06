@@ -132,7 +132,7 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("f1_box_all", width = 2),
                                                      bs4InfoBoxOutput("gini_all", width = 2)),
                                             
-                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plots", width = 8, closable = FALSE, status = "primary", maximizable = TRUE,
+                                            fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plots", width = 8, closable = FALSE, status = "primary", tabStatus = "secondary", maximizable = TRUE,
                                                                 bs4TabPanel(tabName = "Model Accuracies", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
