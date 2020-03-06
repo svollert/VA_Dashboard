@@ -1411,9 +1411,11 @@ server = function(input, output, session) {
   
   boxplotplot <- reactive({
     if(is.null(input$models)){return()}
+    t <- list(
+      size = 14)
     results <- boxplot_calculation()
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
-      layout(boxmode = "group", yaxis = list(title = "Score over all classes"), xaxis = list(tickvals = input$models, tickmode = "array"))
+      layout(boxmode = "group", yaxis = list(title = "Score over all classes"), xaxis = list(tickvals = input$models, tickmode = "array"), font=t)
     p
   })
   
