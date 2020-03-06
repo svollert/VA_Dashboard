@@ -73,7 +73,7 @@ ui = bs4DashPage(
                              labelText = "!",
                              status = "primary",
                              bs4DropdownMenuItem(
-                               message = HTML("You can collapse the sidebars <br/> by clicking on the icons")
+                               HTML("You can collapse the sidebars <br/> by clicking on the icons")
                              )
                            ))),
   
@@ -303,7 +303,7 @@ server = function(input, output, session) {
         print(start)
         print(end)
         
-        for(i in seq(1,models)){ # FÃ¼r jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
+        for(i in seq(1,models)){ # Für jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
           data[start[i]:end[i],] <- t(data[start[i]:end[i],])}
       }
     else{
@@ -320,6 +320,13 @@ server = function(input, output, session) {
   modelnames <- reactive({
     modelnames <- input$modelnames
     if(is.null(modelnames) && is.null(data())){return()}
+    if(is.null(input$file) && is.null(modelnames)) {
+      models <- read.delim(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist__models.txt", sep = input$sep2, header = FALSE, stringsAsFactors = FALSE)
+      models <- unlist(models)
+      models <- unname(models)
+      models <- c(models)
+      return(models)
+    }
     if(is.null(modelnames)){
       models <- paste("Model", 1:(nrow(data())/ncol(data())))
       return(models)
@@ -1484,7 +1491,7 @@ server = function(input, output, session) {
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
   
-  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgew?hlt
+  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
     available_models <- modelnames()
     disabled_choices <- available_models %in% input$models
     updatePickerInput(session, "models",
