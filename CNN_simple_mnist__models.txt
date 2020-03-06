@@ -1,10 +1,10 @@
-Model: rmsprop relu
-Model: rmsprop elu
-Model: adam relu
-Model: adam elu
-Model: sgd relu
-Model: sgd elu
-Model: adagrad relu
-Model: adagrad elu
-Model: adadelta relu
-Model: adadelta elu
+CNN_k=2
+CNN_k=3
+CNN_k=4
+CNN_k=5
+CNN_k=6
+CNN_k=7
+CNN_k=8
+CNN_k=9
+CNN_k=10
+CNN_k=11
