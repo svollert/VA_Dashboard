@@ -133,6 +133,7 @@ ui = bs4DashPage(
                                                      bs4InfoBoxOutput("gini_all", width = 2)),
                                             
                                             fluidRow(bs4TabCard(id = "Distribution_Error_Tab", title = "Per-model Metrics Plots", width = 8, closable = FALSE, status = "primary", tabStatus = "secondary", maximizable = TRUE,
+                                                                bs4TabPanel(tabName = "Model Rank", plotlyOutput("model_rank_plot")),
                                                                 bs4TabPanel(tabName = "Model Accuracies", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
@@ -303,7 +304,7 @@ server = function(input, output, session) {
         print(start)
         print(end)
         
-        for(i in seq(1,models)){ # Für jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
+        for(i in seq(1,models)){ # F?r jedes Modell (Sequenz ist eine Modelllaenge) transponiere die Confusion Matrix und speichere sie wieder im Data Dataframe
           data[start[i]:end[i],] <- t(data[start[i]:end[i],])}
       }
     else{
@@ -1467,6 +1468,63 @@ server = function(input, output, session) {
   
   output$acc_std_plot <- renderPlotly({acc_std_plot()})
   
+  ## Plot fÃ¼r den Modellrank nach Formel im Paper
+  output$model_rank_plot <- renderPlotly({
+    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
+    data <- selected_models()
+    
+    missclassified_data <- selected_models_missclassified()
+    
+    #accuracy <- (sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())
+    
+    
+    chunk <- ncol(data)
+    n <- nrow(data)
+    r  <- rep(1:length(input$models),each=chunk)[1:n]
+    d <- split(data,r)
+    d_miss <- split(missclassified_data, r)
+    e <- c()
+    f <- c()
+    for(i in seq(1, length(d))){
+      e <- c(e, sum(unlist(d[i])))
+      f <- c(f, sum(unlist(d_miss[i])))
+    }
+    accuracy <- (e-f)/e
+    accuracy_model <- accuracy
+
+    accuracy <- rep(accuracy, each=ncol(data))
+    recall <- boxplot_calculation()
+    
+    recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
+    
+    ci <- abs(recall-accuracy)
+    
+    ci <- colSums(matrix(ci, nrow=ncol(data)))
+ 
+    ci_avg <- ci/ncol(data)
+    
+    ci_avg <- normalize(ci_avg, range=c(0,1), method="range")
+    accuracy_model <- normalize(accuracy_model, range=c(0,1), method="range")
+    
+
+    ci_prime <- 1 - ci_avg
+ 
+    m_rank <- 0.5*abs(accuracy_model + ci_prime)
+    
+    
+    knn_train <- c(max(m_rank), median(m_rank), min(m_rank))
+    knn_label <- as.factor(c("Good", "Medium", "Weak"))
+    classifier_knn = knn(train = as.data.frame(knn_train), test=as.data.frame(m_rank) ,cl=knn_label, k=1)
+    
+    y <- list(
+      title = "Model Rank",
+      titlefont = f
+    )
+    
+    plot_ly(x=input$models, y=m_rank, type="bar", color = classifier_knn, colors = c("#006D2C", "Orange", "#A50F15")) %>%
+      layout(yaxis = y)
+  })
+  
   observeEvent(modelnames(), {
     available_models <- modelnames()
     updatePickerInput(session, "models", choices = available_models, selected = available_models)
@@ -1493,7 +1551,7 @@ server = function(input, output, session) {
     updatePickerInput(session, "classes", choices = available_classes , selected = NULL)
   })
   
-  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgewählt
+  observeEvent(data(), { # Nach Dataupload und bei Start -> Alle Modelle ausgew?hlt
     available_models <- modelnames()
     disabled_choices <- available_models %in% input$models
     updatePickerInput(session, "models",
