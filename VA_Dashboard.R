@@ -57,6 +57,7 @@ library(BBmisc)
 library(dplyr)
 library(DescTools)
 library(pals)
+library(class)
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -137,7 +138,7 @@ ui = bs4DashPage(
                                                                 bs4TabPanel(tabName = "Model Accuracies", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
                                                                 bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
-                                                                                                          <li>Accuracy: Accuracy of the model  <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
+                                                                                                          <li>Accuracy: Accuracy of the model  <li>Avg. Accuracy: Average Accuracy across all models <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
                                                      bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -1348,8 +1349,10 @@ server = function(input, output, session) {
       f <- c(f, sum(unlist(d_miss[i])))
     }
     acc <- (e-f)/e
+    average_acc <- mean(acc)
     models <- input$models
     p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Overall Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Average Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline", hovertemplate = paste('<i>Baseline</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random", hovertemplate = paste('<i>Random</i>: %{y:.4p}<extra></extra>')) %>%
       layout(xaxis = list(tickvals = models, tickmode = "array"))
@@ -1514,15 +1517,23 @@ server = function(input, output, session) {
     
     knn_train <- c(max(m_rank), median(m_rank), min(m_rank))
     knn_label <- as.factor(c("Good", "Medium", "Weak"))
-    classifier_knn = knn(train = as.data.frame(knn_train), test=as.data.frame(m_rank) ,cl=knn_label, k=1)
+    
+    data <- data.frame(input$models, m_rank)
+    data <- data[order(-data$m_rank),]
+    
+    classifier_knn = knn(train = as.data.frame(knn_train), test=as.data.frame(data$m_rank) ,cl=knn_label, k=1)
+    
+    data$label <- classifier_knn
+    
     
     y <- list(
       title = "Model Rank",
       titlefont = f
     )
     
-    plot_ly(x=input$models, y=m_rank, type="bar", color = classifier_knn, colors = c("#006D2C", "Orange", "#A50F15")) %>%
-      layout(yaxis = y)
+    plot_ly(x=data$input.models, y=data$m_rank, type="bar", color = data$label, colors = c("#006D2C", "Orange", "#A50F15"), hovertemplate = paste('<i>Model</i>: %{x}', '<br><i>Score</i>: %{y:.4f}')) %>%
+      layout(yaxis = y, xaxis = list(tickvals = data$input.models, tickmode = "array"))
+    
   })
   
   observeEvent(modelnames(), {
