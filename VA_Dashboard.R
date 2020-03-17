@@ -1351,8 +1351,14 @@ server = function(input, output, session) {
     acc <- (e-f)/e
     average_acc <- mean(acc)
     models <- input$models
+    
+    recall <- boxplot_calculation()
+    recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
+    macro_avg_recall <- colMeans(matrix(recall, ncol(data)))
+    
     p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Overall Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Average Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines", name = "Macro Avg. Recall", hovertemplate = paste('<i>Macro Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline", hovertemplate = paste('<i>Baseline</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random", hovertemplate = paste('<i>Random</i>: %{y:.4p}<extra></extra>')) %>%
       layout(xaxis = list(tickvals = models, tickmode = "array"))
@@ -1476,44 +1482,24 @@ server = function(input, output, session) {
     if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
     data <- selected_models()
     
-    missclassified_data <- selected_models_missclassified()
-    
-    #accuracy <- (sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models())
-    
-    
-    chunk <- ncol(data)
-    n <- nrow(data)
-    r  <- rep(1:length(input$models),each=chunk)[1:n]
-    d <- split(data,r)
-    d_miss <- split(missclassified_data, r)
-    e <- c()
-    f <- c()
-    for(i in seq(1, length(d))){
-      e <- c(e, sum(unlist(d[i])))
-      f <- c(f, sum(unlist(d_miss[i])))
-    }
-    accuracy <- (e-f)/e
-    accuracy_model <- accuracy
-
-    accuracy <- rep(accuracy, each=ncol(data))
     recall <- boxplot_calculation()
     
     recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
+    macro_avg_recall_model <- colMeans(matrix(recall, ncol(data)))
+    macro_avg_recall <- rep(macro_avg_recall_model, each=ncol(data))
     
-    ci <- abs(recall-accuracy)
+    ci <- abs(recall-macro_avg_recall) 
     
     ci <- colSums(matrix(ci, nrow=ncol(data)))
  
     ci_avg <- ci/ncol(data)
     
     ci_avg <- normalize(ci_avg, range=c(0,1), method="range")
-    accuracy_model <- normalize(accuracy_model, range=c(0,1), method="range")
+    accuracy_model <- normalize(macro_avg_recall_model, range=c(0,1), method="range")
     
-
     ci_prime <- 1 - ci_avg
  
     m_rank <- 0.5*abs(accuracy_model + ci_prime)
-    
     
     knn_train <- c(max(m_rank), median(m_rank), min(m_rank))
     knn_label <- as.factor(c("Good", "Medium", "Weak"))
@@ -1527,8 +1513,8 @@ server = function(input, output, session) {
     
     
     y <- list(
-      title = "Model Rank",
-      titlefont = f
+      title = "Model Rank" #,
+#      titlefont = f
     )
     
     plot_ly(x=data$input.models, y=data$m_rank, type="bar", color = data$label, colors = c("#006D2C", "Orange", "#A50F15"), hovertemplate = paste('<i>Model</i>: %{x}', '<br><i>Score</i>: %{y:.4f}')) %>%
