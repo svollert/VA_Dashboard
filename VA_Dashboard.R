@@ -58,6 +58,8 @@ library(dplyr)
 library(DescTools)
 library(pals)
 library(class)
+library(matrixStats)
+
 
 ui = bs4DashPage(
   old_school = FALSE,
@@ -793,7 +795,7 @@ server = function(input, output, session) {
   
   # Ausgabe Sunburstplot, wobei die zuvor erstellten Sunburstdaten (Labels, Parents, Values) verwendet werden
   output$sunburst_plot <- renderPlotly({
-    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
+    if(is.null(input$models) || length(input$models) != (nrow(selected_models()) / ncol(selected_models()))){return()}
     data <- sunburst_data()
     p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
     p
@@ -1432,7 +1434,7 @@ server = function(input, output, session) {
   output$boxplot <- renderPlotly({boxplotplot()})
   
   acc_std_plot <- reactive({
-    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
+    if(is.null(input$models) || length(input$models) != (nrow(selected_models()) / ncol(selected_models()))){return()}
     data <- selected_models()
     missclassified_data <- selected_models_missclassified()
     chunk <- ncol(data)
@@ -1448,29 +1450,22 @@ server = function(input, output, session) {
     }
     acc <- (e-f)/e
     
-    cm <- selected_models()
-    cm_row <- rowSums(cm)
-    precision <- cm/cm_row
-    results <- c()
-    for(i in seq(1,length(input$models))) {
-      vector_score <- vector(mode="numeric")
-      for(j in seq(1,ncol(cm))) {
-        vector_score <- append(vector_score, round(precision[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
-      }
-      vector_score <- sd(vector_score)
-      results <- c(results, vector_score)
-    }
+
+    
+    recall <- boxplot_calculation()
+    
+    recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
+    
+    recallsd <- colSds(matrix(recall, ncol(data)))
     
     x <- list(
-      title = "Standard deviation of recalls",
-      titlefont = f
+      title = "Standard deviation of recalls"
     )
     y <- list(
-      title = "Overall Accuracy",
-      titlefont = f
+      title = "Overall Accuracy"
     )
     modelnames <- factor(input$models, levels = input$models)
-    p <- plot_ly(x = results, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>1-Std</i>: %{x:.4p}'))%>%
+    p <- plot_ly(x = recallsd, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>Std</i>: %{x:.4p}'))%>%
       layout(xaxis = x, yaxis = y)
     p
   })
@@ -1479,7 +1474,7 @@ server = function(input, output, session) {
   
   ## Plot für den Modellrank nach Formel im Paper
   output$model_rank_plot <- renderPlotly({
-    if(is.null(input$models) || length(input$models) != (nrow(data()) / ncol(data()))){return()}
+    if(is.null(input$models) || length(input$models) != (nrow(selected_models()) / ncol(selected_models()))){return()}
     data <- selected_models()
     
     recall <- boxplot_calculation()
