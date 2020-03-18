@@ -542,32 +542,36 @@ server = function(input, output, session) {
     )
   })
   
-  output$acc_box_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Avg. Accuracy",
-      0,
-      icon = "credit-card",
+  output$acc_box_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5> Avg. Accuracy"),
+      subtitle= HTML("<h5>", 0),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Avg. Accuracy",
-      round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()), 4),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Avg. Accuracy"),
+      footer = "Over all models",
+      subtitle = HTML("<h5>", round((sum(selected_models()) - sum(selected_models_missclassified())) / sum(selected_models()), 4)),
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
   
-  output$baseline_box_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Baseline Accuracy",
-      0,
-      icon = "credit-card",
+  output$baseline_box_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Baseline Accuracy"),
+      subtitle = HTML("<h5>", 0),
+      footer = "Based on most frequent class",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Baseline Accuracy",
-      round(max(colSums(selected_models())) / sum(selected_models()),4),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Baseline Accuracy"),
+      subtitle = HTML("<h5>", round(max(colSums(selected_models())) / sum(selected_models()),4)),
+      footer = "Based on most frequent class",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -593,62 +597,70 @@ server = function(input, output, session) {
     results
   })
   
-  output$precision_box_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Avg. Macro Precision",
-      0,
-      icon = "credit-card",
+  output$precision_box_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Avg. Macro Precision"),
+      subtitle = HTML("<h5>", 0),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Avg. Macro Precision",
-      kpi_precision(),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Avg. Macro Precision"),
+      subtitle = HTML("<h5>", kpi_precision()),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
   
-  output$recall_box_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Avg. Macro Recall",
-      0,
-      icon = "credit-card",
+  output$recall_box_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Avg. Macro Recall"),
+      subtitle = HTML("<h5>", 0),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Avg. Macro Recall",
-      kpi_recall(),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Avg. Macro Recall"),
+      subtitle= HTML("<h5>", kpi_recall()),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     )  
   })
   
-  output$f1_box_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Avg. Macro F1",
-      0,
-      icon = "credit-card",
+  output$f1_box_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Avg. Macro F1"),
+      subtitle = HTML("<h5>", 0),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Avg. Macro F1",
-      kpi_f1(),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Avg. Macro F1"),
+      subtitle = HTML("<h5>", kpi_f1()),
+      footer = "Over all models",
+      icon = "fas fa-calculator",
       status = "primary"
     )  
   })
   
-  output$gini_all <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Gini-Index",
-      0,
-      icon = "credit-card",
+  output$gini_all <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Gini-Index"),
+      subtitle = HTML("<h5>", 0),
+      footer = "Based on class distribution",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Gini-Index",
-      calculate_gini(),
-      icon = "credit-card",
+    bs4ValueBox(
+      value = HTML("<h5>Gini-Index"),
+      subtitle= HTML("<h5>", calculate_gini()),
+      footer = "Based on class distribution",
+      icon = "fas fa-calculator",
       status = "primary"
     )  
   })
@@ -765,6 +777,9 @@ server = function(input, output, session) {
     if(input$valueswitch==TRUE){
       # Values f?r die ersten drei Stufen festlegen
       values <- sum(data)/ (ncol(data)*nrow(data)) # Anzahl Fehlklassifizierungen ?ber alle Modelle
+      values <- values * ncol(data)
+      
+      print(values)
       for (i in seq(1, length(input$models))) {
         values <- c(values, mean(colSums(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), ]))) # Anzahl Fehlklassifizierungen je Modell
       }
