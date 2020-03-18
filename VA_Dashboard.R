@@ -762,6 +762,20 @@ server = function(input, output, session) {
     labels <- c(labels, classes)
     parents <- c(parents, rep(input$models, each = ncol(data)))
     
+    if(input$valueswitch==TRUE){
+      # Values f?r die ersten drei Stufen festlegen
+      values <- sum(data)/ (ncol(data)*nrow(data)) # Anzahl Fehlklassifizierungen ?ber alle Modelle
+      for (i in seq(1, length(input$models))) {
+        values <- c(values, mean(colSums(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), ]))) # Anzahl Fehlklassifizierungen je Modell
+      }
+      
+      for (i in seq(1, length(input$models))) {
+        for (j in seq(1, ncol(data))) {
+          values <- c(values, mean(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), j])) # Anzahl Fehlklassifizierungen je Modell und Klasse
+        }
+      }
+      
+    }else{
     # Values f?r die ersten drei Stufen festlegen
     values <- sum(data) # Anzahl Fehlklassifizierungen ?ber alle Modelle
 
@@ -774,7 +788,7 @@ server = function(input, output, session) {
         values <- c(values, sum(data[((i*ncol(data))-(ncol(data)-1)):(i*ncol(data)), j])) # Anzahl Fehlklassifizierungen je Modell und Klasse
       }
     }
-    
+    }
     # Labels, Parents und Values f?r die vierte Stufe festlegen
     vec_classes <- selected_classes()
     for (i in seq(1, length(input$models))) {
@@ -797,7 +811,11 @@ server = function(input, output, session) {
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models) || length(input$models) != (nrow(selected_models()) / ncol(selected_models()))){return()}
     data <- sunburst_data()
-    p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
+    if(input$valueswitch==TRUE){
+      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
+    }else{
+      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Total Miss: %{value:.i}', '<extra></extra>'))
+    }
     p
   })
   
