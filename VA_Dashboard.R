@@ -586,7 +586,7 @@ server = function(input, output, session) {
     bs4ValueBox(
       value = HTML("<h5>Number of Samples"),
       subtitle = HTML("<h5>", samples()),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -595,7 +595,7 @@ server = function(input, output, session) {
     bs4ValueBox(
       value = HTML("<h5>Number of Models"),
       subtitle = HTML("<h5>", length(input$models)),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -727,13 +727,15 @@ server = function(input, output, session) {
     if(is.null(input$models)){return(bs4ValueBox(
       value = HTML("<h5>Gini-Index"),
       subtitle = HTML("<5>", 0),
-      icon = "credit-card",
+      footer = "Based on class distribution",
+      icon = "fas fa-calculator",
       status = "primary"
     ))}
     bs4ValueBox(
       value = HTML("<h5>Gini-Index"),
       subtitle = HTML("<h5>", calculate_gini()),
-      icon = "credit-card",
+      footer = "Based on class distribution",
+      icon = "fas fa-calculator",
       status = "primary"
     )  
   })
@@ -746,7 +748,7 @@ server = function(input, output, session) {
       } else {
         subtitle = HTML("<h5>", round((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single()),4))},
       footer = paste0("Based on ", input$detailedmodel),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -760,7 +762,7 @@ server = function(input, output, session) {
         subtitle = HTML("<h5>", round(max(colSums(selected_models_single())) / sum(selected_models_single()),4))
       },
       footer = paste0("Based on class distribution"),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -773,7 +775,7 @@ server = function(input, output, session) {
       } else {
         subtitle = HTML("<h5>", round(mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())), 4))},
       footer = paste0("Based on ", input$detailedmodel),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -786,7 +788,7 @@ server = function(input, output, session) {
       } else {
         subtitle = HTML("<h5>", round(mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())), 4))},
       footer = paste0("Based on ", input$detailedmodel),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -799,7 +801,7 @@ server = function(input, output, session) {
       } else {
         subtitle = HTML("<h5>", round((2 * (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) * (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single()))) / (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) + (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())))))),4))},
       footer = paste0("Based on ", input$detailedmodel),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
@@ -812,7 +814,7 @@ server = function(input, output, session) {
       } else {
         subtitle = HTML("<h5>", round((((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single())) - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))) / (1 - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))), 4))},
       footer = paste0("Based on ", input$detailedmodel),
-      icon = "credit-card",
+      icon = "fas fa-calculator",
       status = "primary"
     )
   })
