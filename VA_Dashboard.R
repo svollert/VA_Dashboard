@@ -95,21 +95,21 @@ ui = bs4DashPage(
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
-                                 h5(helpText("Upload a Confusion Matrix")),
-                                 h6(helpText("Choose the seperator")),
+                                 h5(helpText(HTML("<br>Load Confusion Matrices"))),
+                                 h6(helpText("Choose separator")),
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
-                                 h6(helpText("Choose the file")),
-                                 h6(helpText(HTML("True Labels in Columns <br> or in Rows?"))),
+                                 h5(helpText("Select file")),
+                                 h6(helpText(HTML("Labels in columns or rows?"))),
                                  switchInput("column_row_switch", label=NULL, value=TRUE, onLabel = "Columns", offLabel = "Rows", onStatus = "primary", offStatus = NULL),
                                  fileInput("file", accept = c(".csv"), label = NULL, buttonLabel = "Search"),
                                  h6(HTML("<hr>")),
-                                 h5(helpText("Upload model descriptions")),
-                                 h6(helpText("Choose the seperator")),
+                                 h5(helpText("Load model names")),
+                                 h6(helpText("Choose separator")),
                                  pickerInput(inputId = "sep2", label = NULL, choices = c(Newline = "\n", Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = "\n", multiple = FALSE),
-                                 h6(helpText("Choose the file")),
+                                 h6(helpText("Select file")),
                                  fileInput("modelnames", accept = c(".txt"), label = NULL, buttonLabel = "Search"),
                                  h6(HTML("<hr>")),
-                                 h5(helpText("Select the Models")),
+                                 h5(helpText("Select Models")),
                                  pickerInput(inputId = "models",
                                              label = NULL,
                                              choices = "",
@@ -118,7 +118,7 @@ ui = bs4DashPage(
                                                                      size = 10,
                                                                      selectedTextFormat = "count > 3"),
                                              multiple = TRUE),
-                                 h5(helpText("Select the Classes which are not relevant")),
+                                 h5(helpText("Exclude irrelevant Classes")),
                                  uiOutput("classlimit"),
                                  h6(HTML("<hr>")),
                                  h5(helpText("Display absolute or percentage values?")),
@@ -315,51 +315,25 @@ server = function(input, output, session) {
     }
     
     
-    # classes <- ncol(data)
-    # check <- nrow(data) %% classes
-    # format_plausible <- ifelse(check == 0, TRUE, FALSE)
-    # 
-    # if(format_plausible == FALSE){
-    #     sendSweetAlert(
-    #       session,
-    #       title = "Error!",
-    #       text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
-    #       type = "error",
-    #       btn_labels = "Ok",
-    #       btn_colors = "#3085d6",
-    #       html = FALSE,
-    #       closeOnClickOutside = TRUE,
-    #       showCloseButton = FALSE,
-    #       width = NULL)
-    #     data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
-    # }
-    # 
-    # 
-    # 
-    # 
-    # sums <- apply(data, MARGIN=1, FUN=sum) # sum up rows
-    # errors <- NULL
-    # 
-    # for(i in seq(1,classes)){
-    #   idx <- seq(i,length(sums), classes) # get confusions of one class
-    #   sums_1class <- sums[idx]
-    #   errors <- c(errors, which(sums_1class != sums_1class[1]))
-    # }
-    # 
-    # if(sum(errors) > 0){
-    #   sendSweetAlert(
-    #     session,
-    #     title = "Error!",
-    #     text = "Inconsistency in the confusion matrizes! Please check the results! Proceeding to load default dataset!",
-    #     type = "error",
-    #     btn_labels = "Ok",
-    #     btn_colors = "#3085d6",
-    #     html = FALSE,
-    #     closeOnClickOutside = TRUE,
-    #     showCloseButton = FALSE,
-    #     width = NULL)
-    #   data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
-    # }
+    classes <- ncol(data)
+    check <- nrow(data) %% classes
+    format_plausible <- ifelse(check == 0, TRUE, FALSE)
+
+    if(format_plausible == FALSE){
+        sendSweetAlert(
+          session,
+          title = "Error!",
+          text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
+          type = "error",
+          btn_labels = "Ok",
+          btn_colors = "#3085d6",
+          html = FALSE,
+          closeOnClickOutside = TRUE,
+          showCloseButton = FALSE,
+          width = NULL)
+        data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
+
     
       data
     
@@ -572,19 +546,19 @@ server = function(input, output, session) {
   })
   
 #--------------------------Ab hier Metriken f?r Infoboxen---------------------------------------------------------------
-  output$samples_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Number of Samples",
-      samples(),
+  output$samples_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Number of Samples"),
+      subtitle = HTML("<h5>", samples()),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$nomodels_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Number of Models",
-      length(input$models),
+  output$nomodels_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Number of Models"),
+      subtitle = HTML("<h5>", length(input$models)),
       icon = "credit-card",
       status = "primary"
     )
@@ -713,89 +687,95 @@ server = function(input, output, session) {
     )  
   })
   
-  output$gini_all_prop <- renderbs4InfoBox({
-    if(is.null(input$models)){return(bs4InfoBox(
-      title = "Gini-Index",
-      0,
+  output$gini_all_prop <- renderbs4ValueBox({
+    if(is.null(input$models)){return(bs4ValueBox(
+      value = HTML("<h5>Gini-Index"),
+      subtitle = HTML("<5>", 0),
       icon = "credit-card",
       status = "primary"
     ))}
-    bs4InfoBox(
-      title = "Gini-Index",
-      calculate_gini(),
+    bs4ValueBox(
+      value = HTML("<h5>Gini-Index"),
+      subtitle = HTML("<h5>", calculate_gini()),
       icon = "credit-card",
       status = "primary"
     )  
   })
   
-  output$singleacc_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Accuracy",
+  output$singleacc_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Accuracy"),
       if (length(input$models) == 0) {
-        0
+        subtitle = HTML("<h5>", 0)
       } else {
-        round((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single()),4)},
+        subtitle = HTML("<h5>", round((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single()),4))},
+      footer = paste0("Based on ", input$detailedmodel),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$singlebaseacc_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Baseline Accuracy",
+  output$singlebaseacc_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Baseline Accuracy"),
       if (length(input$models) == 1) {
-        0
+        subtitle = HTML("<h5>", 0)
       } else {
-        round(max(colSums(selected_models_single())) / sum(selected_models_single()),4)
+        subtitle = HTML("<h5>", round(max(colSums(selected_models_single())) / sum(selected_models_single()),4))
       },
+      footer = paste0("Based on class distribution"),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$precision_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Macro Precision",
+  output$precision_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Macro Precision"),
       if (length(input$models) == 0) {
-        0
+        subtitlee = HTML("<h5>", 0)
       } else {
-        round(mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())), 4)},
+        subtitle = HTML("<h5>", round(mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())), 4))},
+      footer = paste0("Based on ", input$detailedmodel),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$recall_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Macro Recall",
+  output$recall_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Macro Recall"),
       if (length(input$models) == 0) {
-        0
+        subtitle = HTML("<h5>", 0)
       } else {
-        round(mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())), 4)},
+        subtitle = HTML("<h5>", round(mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())), 4))},
+      footer = paste0("Based on ", input$detailedmodel),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$f1_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Macro F1-Score",
+  output$f1_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Macro F1-Score"),
       if (length(input$models) == 0) {
-        0
+        subtitle = HTML("<h5>", 0)
       } else {
-        round((2 * (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) * (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single()))) / (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) + (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())))))),4)},
+        subtitle = HTML("<h5>", round((2 * (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) * (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single()))) / (mean(diag(as.matrix(selected_models_single())) / colSums(selected_models_single())) + (mean(diag(as.matrix(selected_models_single())) / rowSums(selected_models_single())))))),4))},
+      footer = paste0("Based on ", input$detailedmodel),
       icon = "credit-card",
       status = "primary"
     )
   })
   
-  output$kappa_box <- renderbs4InfoBox({
-    bs4InfoBox(
-      title = "Kappa-Score",
+  output$kappa_box <- renderbs4ValueBox({
+    bs4ValueBox(
+      value = HTML("<h5>Kappa-Score"),
       if (length(input$models) == 0) {
-        0
+        subtitle = HTML("<h5>", 0)
       } else {
-        round((((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single())) - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))) / (1 - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))), 4)},
+        subtitle = HTML("<h5>", round((((sum(selected_models_single()) - sum(selected_models_missclassified_single())) / sum(selected_models_single())) - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))) / (1 - (sum((rowSums(selected_models_single()) / sum(selected_models_single())) * ((colSums(selected_models_single()) / sum(selected_models_single())))))), 4))},
+      footer = paste0("Based on ", input$detailedmodel),
       icon = "credit-card",
       status = "primary"
     )
