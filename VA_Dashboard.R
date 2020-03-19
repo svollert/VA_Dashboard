@@ -288,6 +288,8 @@ ui = bs4DashPage(
 
 
 server = function(input, output, session) {
+  values_data <- reactiveValues(df = data.frame())
+  
   data <- reactive({
     file1 <- input$file
     if(is.null(file1)){
@@ -322,7 +324,7 @@ server = function(input, output, session) {
       sendSweetAlert(
         session,
         title = "Error!",
-        text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
+        text = "Please check the dimensions of your confusion matrizes! Restoring previous data set!",
         type = "error",
         btn_labels = "Ok",
         btn_colors = "#3085d6",
@@ -330,7 +332,8 @@ server = function(input, output, session) {
         closeOnClickOutside = TRUE,
         showCloseButton = FALSE,
         width = NULL)
-      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+      data <- values_data$df    
+      #data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
     
     models <- nrow(data)/classes
@@ -356,7 +359,7 @@ server = function(input, output, session) {
       sendSweetAlert(
         session,
         title = "Error!",
-        text = "Inconsistency in the confusion matrizes! Please check the results! Proceeding to load default dataset!",
+        text = "Inconsistency in the confusion matrizes! Please check the results! Restoring previous data set!",
         type = "error",
         btn_labels = "Ok",
         btn_colors = "#3085d6",
@@ -364,11 +367,12 @@ server = function(input, output, session) {
         closeOnClickOutside = TRUE,
         showCloseButton = FALSE,
         width = NULL)
-      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+      data <- values_data$df
+      #data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
     
-    data
-    
+    values_data$df <- data
+    return(data)
   })
   
   plotcolors <- reactive({
