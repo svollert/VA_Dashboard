@@ -313,6 +313,54 @@ server = function(input, output, session) {
     else{
       print("Spalte")
     }
+    
+    
+    classes <- ncol(data)
+    check <- nrow(data) %% classes
+    format_plausible <- ifelse(check == 0, TRUE, FALSE)
+    
+    if(format_plausible == FALSE){
+        sendSweetAlert(
+          session,
+          title = "Error!",
+          text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
+          type = "error",
+          btn_labels = "Ok",
+          btn_colors = "#3085d6",
+          html = FALSE,
+          closeOnClickOutside = TRUE,
+          showCloseButton = FALSE,
+          width = NULL)
+        data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
+    
+    
+    
+    
+    sums <- apply(data, MARGIN=1, FUN=sum) # sum up rows
+    errors <- NULL
+    
+    for(i in seq(1,classes)){
+      idx <- seq(i,length(sums), classes) # get confusions of one class
+      sums_1class <- sums[idx]
+      errors <- c(errors, which(sums_1class != sums_1class[1]))
+    }
+    
+    if(errors > 0){
+      sendSweetAlert(
+        session,
+        title = "Error!",
+        text = "Inconsistency in the confusion matrizes! Please check the results! Proceeding to load default dataset!",
+        type = "error",
+        btn_labels = "Ok",
+        btn_colors = "#3085d6",
+        html = FALSE,
+        closeOnClickOutside = TRUE,
+        showCloseButton = FALSE,
+        width = NULL)
+      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
+    
       data
     
   })
