@@ -1456,8 +1456,8 @@ server = function(input, output, session) {
     macro_avg_recall <- colMeans(matrix(recall, ncol(data)))
     
     p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Overall Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines+markers", name = "Macro Avg. Recall", hovertemplate = paste('<i>Macro Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Average Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
-      add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines", name = "Macro Avg. Recall", hovertemplate = paste('<i>Macro Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline", hovertemplate = paste('<i>Baseline</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random", hovertemplate = paste('<i>Random</i>: %{y:.4p}<extra></extra>')) %>%
       layout(xaxis = list(tickvals = models, tickmode = "array"))
