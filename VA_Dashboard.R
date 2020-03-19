@@ -346,7 +346,7 @@ server = function(input, output, session) {
       errors <- c(errors, which(sums_1class != sums_1class[1]))
     }
     
-    if(errors > 0){
+    if(sum(errors) > 0){
       sendSweetAlert(
         session,
         title = "Error!",
