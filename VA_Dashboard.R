@@ -314,28 +314,60 @@ server = function(input, output, session) {
       print("Spalte")
     }
     
-    
     classes <- ncol(data)
     check <- nrow(data) %% classes
     format_plausible <- ifelse(check == 0, TRUE, FALSE)
-
-    if(format_plausible == FALSE){
-        sendSweetAlert(
-          session,
-          title = "Error!",
-          text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
-          type = "error",
-          btn_labels = "Ok",
-          btn_colors = "#3085d6",
-          html = FALSE,
-          closeOnClickOutside = TRUE,
-          showCloseButton = FALSE,
-          width = NULL)
-        data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
-    }
-
     
-      data
+    if(format_plausible == FALSE){
+      sendSweetAlert(
+        session,
+        title = "Error!",
+        text = "Please check the dimensions of your confusion matrizes! Proceeding to load default dataset!",
+        type = "error",
+        btn_labels = "Ok",
+        btn_colors = "#3085d6",
+        html = FALSE,
+        closeOnClickOutside = TRUE,
+        showCloseButton = FALSE,
+        width = NULL)
+      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
+    
+    models <- nrow(data)/classes
+    sums <- NULL
+    
+    for(i in seq(1,classes)){
+      conf_1class <- data[,i] # get complete column of all consec. conf matrices
+      
+      for(j in seq(1,length(conf_1class),classes)){
+        s <- sum( conf_1class[j : (j+classes-1)] ) # one column of one conf. matrix
+        sums <- c(sums,s)
+      }
+    }
+    
+    #check class confusions for each model
+    errors <- NULL
+    for(i in seq(1,length(sums), models)){
+      sums_1class <- sums[i:(i+models-1)]
+      errors <- c(errors, which(sums_1class != sums_1class[1]))
+    }
+    
+    if(length(errors) != 0){
+      sendSweetAlert(
+        session,
+        title = "Error!",
+        text = "Inconsistency in the confusion matrizes! Please check the results! Proceeding to load default dataset!",
+        type = "error",
+        btn_labels = "Ok",
+        btn_colors = "#3085d6",
+        html = FALSE,
+        closeOnClickOutside = TRUE,
+        showCloseButton = FALSE,
+        width = NULL)
+      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
+    }
+    
+    data
     
   })
   
