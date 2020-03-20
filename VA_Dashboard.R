@@ -59,6 +59,7 @@ library(DescTools)
 library(pals)
 library(class)
 library(matrixStats)
+library(shinyjs)
 
 
 ui = bs4DashPage(
@@ -293,11 +294,12 @@ server = function(input, output, session) {
   data <- reactive({
     file1 <- input$file
     if(is.null(file1)){
-      return(read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE))
+      data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
     else{
       data <- read.table(file=file1$datapath, sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
+    
     if(input$column_row_switch == FALSE){ # Wenn Switch auf Zeile steht
         print("Zeile")
         rows = nrow(data)
@@ -313,7 +315,6 @@ server = function(input, output, session) {
           data[start[i]:end[i],] <- t(data[start[i]:end[i],])}
       }
     else{
-      print("Spalte")
     }
     
     classes <- ncol(data)
@@ -332,7 +333,8 @@ server = function(input, output, session) {
         closeOnClickOutside = TRUE,
         showCloseButton = FALSE,
         width = NULL)
-      data <- values_data$df    
+      data <- values_data$df
+      reset("file")
       #data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
     
@@ -368,6 +370,7 @@ server = function(input, output, session) {
         showCloseButton = FALSE,
         width = NULL)
       data <- values_data$df
+      reset("file")
       #data <- read.table(file="https://raw.githubusercontent.com/svollert/VA_Dashboard/master/CNN_simple_mnist_kernel_size_strides_20epochs.csv", sep = input$sep, header = TRUE, stringsAsFactors = FALSE)
     }
     
