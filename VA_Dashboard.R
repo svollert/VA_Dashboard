@@ -140,8 +140,9 @@ ui = bs4DashPage(
                                                                 bs4TabPanel(tabName = "Model Rank", plotlyOutput("model_rank_plot")),
                                                                 bs4TabPanel(tabName = "Model Accuracies", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
-                                                                bs4TabPanel(tabName = "Metric Info", HTML("<ul> <li>F1: Harmonic mean of precision and recall  <li>Precision: Positive predictive rate  <li>Recall: True positive rate  
-                                                                                                          <li>Accuracy: Accuracy of the model  <li>Avg. Accuracy: Average Accuracy across all models <li>Baseline: Accuracy of always predicting the most frequent class  <li>Random: Accuracy of a completly random prediction"))),
+                                                                bs4TabPanel(tabName = "Metric Info", HTML("<ul><li>Model Rank: Score between 0 and 1, where Score near 0 corresponds to a weak model and Score near 1 corresponds to a good model.<br> The score is calculated by Macro-Avg. Recall Class Imbalances <li>Model Accuracy: Accuracy of the model. Amount of correctly classified samples in relation to all samples. 
+                                                                                                          <li>Avg. Accuracy: Average Accuracy across all models. <li>Baseline Accuracy: Accuracy of always predicting the most frequent class. <li>Random Accuracy: Accuracy of a completly random prediction.
+                                                                                                          <li>Precision: Fraction of positive instances that were actually correct. <li>Recall: Percentage of correctly classified instances of a class. <li>F1-Score: Harmonic mean of precision and recall."))),
                                                      bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
@@ -660,14 +661,14 @@ server = function(input, output, session) {
   
   output$precision_box_all <- renderbs4ValueBox({
     if(is.null(input$models)){return(bs4ValueBox(
-      value = HTML("<h5>Avg. Macro Precision"),
+      value = HTML("<h5>Macro-Avg. Precision"),
       subtitle = HTML("<h5>", 0),
       footer = "Over all models",
       icon = "fas fa-calculator",
       status = "primary"
     ))}
     bs4ValueBox(
-      value = HTML("<h5>Avg. Macro Precision"),
+      value = HTML("<h5>Macro-Avg. Precision"),
       subtitle = HTML("<h5>", kpi_precision()),
       footer = "Over all models",
       icon = "fas fa-calculator",
@@ -677,14 +678,14 @@ server = function(input, output, session) {
   
   output$recall_box_all <- renderbs4ValueBox({
     if(is.null(input$models)){return(bs4ValueBox(
-      value = HTML("<h5>Avg. Macro Recall"),
+      value = HTML("<h5>Macro-Avg. Recall"),
       subtitle = HTML("<h5>", 0),
       footer = "Over all models",
       icon = "fas fa-calculator",
       status = "primary"
     ))}
     bs4ValueBox(
-      value = HTML("<h5>Avg. Macro Recall"),
+      value = HTML("<h5>Macro-Avg. Recall"),
       subtitle= HTML("<h5>", kpi_recall()),
       footer = "Over all models",
       icon = "fas fa-calculator",
@@ -694,14 +695,14 @@ server = function(input, output, session) {
   
   output$f1_box_all <- renderbs4ValueBox({
     if(is.null(input$models)){return(bs4ValueBox(
-      value = HTML("<h5>Avg. Macro F1"),
+      value = HTML("<h5>Macro-Avg. F1-Score"),
       subtitle = HTML("<h5>", 0),
       footer = "Over all models",
       icon = "fas fa-calculator",
       status = "primary"
     ))}
     bs4ValueBox(
-      value = HTML("<h5>Avg. Macro F1"),
+      value = HTML("<h5>Macro-Avg. F1-Score"),
       subtitle = HTML("<h5>", kpi_f1()),
       footer = "Over all models",
       icon = "fas fa-calculator",
@@ -1460,11 +1461,11 @@ server = function(input, output, session) {
     recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
     macro_avg_recall <- colMeans(matrix(recall, ncol(data)))
     
-    p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Overall Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
-      add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines+markers", name = "Macro Avg. Recall", hovertemplate = paste('<i>Macro Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
-      add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Average Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
-      add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline", hovertemplate = paste('<i>Baseline</i>: %{y:.4p}<extra></extra>')) %>%
-      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random", hovertemplate = paste('<i>Random</i>: %{y:.4p}<extra></extra>')) %>%
+    p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Model Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Model Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines+markers", name = "Macro-Avg. Recall", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Macro-Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Avg. Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline Accuracy", hovertemplate = paste('<i>Baseline Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
+      add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random Accuracy", hovertemplate = paste('<i>Random Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       layout(xaxis = list(tickvals = models, tickmode = "array"))
   })
   output$errorline <- renderPlotly({errorlineplot()})
@@ -1514,7 +1515,7 @@ server = function(input, output, session) {
       for(j in seq(1,ncol(cm))) {
         vector_score <- append(vector_score, round(f1[((i*ncol(cm))-(ncol(cm)-1))+(j-1),j], digits=4))
         vector_model <- append(vector_model, as.character(input$models[i]))
-        vector_metric <- append(vector_metric, "F1")
+        vector_metric <- append(vector_metric, "F1-Score")
       }
       vector_score[is.nan(vector_score)] <- 0
       df_model <- data.frame(Score = vector_score, Model = vector_model, Metric = vector_metric, stringsAsFactors = FALSE)
@@ -1564,7 +1565,7 @@ server = function(input, output, session) {
       title = "Standard deviation of recalls"
     )
     y <- list(
-      title = "Overall Accuracy"
+      title = "Model Accuracy"
     )
     modelnames <- factor(input$models, levels = input$models)
     p <- plot_ly(x = recallsd, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>Std</i>: %{x:.4p}'))%>%
