@@ -459,7 +459,7 @@ server = function(input, output, session) {
   # Wird sp?ter f?r die Detailansicht eines Modells verwendet
   selected_models_single <- reactive({
     if(is.null(modelnames)){return()}
-    model <- match(input$detailedmodel ,modelnames())
+    model <- match(input$detailedmodel ,input$models)
     data <- selected_models()
     data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
     data
@@ -490,7 +490,7 @@ server = function(input, output, session) {
   # Die Confusionmatrix f?r ein ausgew?hltes Modell wird zur?ckgegeben, wobei die Diagonalelemente 0 gesetzt wurden
   selected_models_missclassified_single <- reactive({
     if(is.null(modelnames)){return()}
-    model <- match(input$detailedmodel ,modelnames())
+    model <- match(input$detailedmodel ,input$models)
     data <- selected_models_missclassified()
     data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
     data
@@ -1049,7 +1049,7 @@ server = function(input, output, session) {
   # Die Daten werden f?r die Heatmap vorbereitet
   heatmapplot <- reactive({
     if(length(input$models) == 0){return()}
-    model <- match(input$detailedmodel,modelnames())
+    model <- match(input$detailedmodel,input$models)
     if(input$valueswitch == TRUE){
       data <- round(selected_models_percentage(),3)}
     else{
@@ -1183,7 +1183,8 @@ server = function(input, output, session) {
   
   chorddiagrammplot <- reactive({
     if(length(input$models) == 0){return()}
-    model <- match(input$detailedmodel,modelnames())
+    model <- match(input$detailedmodel,input$models)
+    print(model)
     if(input$valueswitch == TRUE){
       cm <- selected_models_missclassified_percentage()}
     else{
@@ -1213,7 +1214,7 @@ server = function(input, output, session) {
   
   sankeyplot <- reactive({
     if(length(input$models) == 0){return()}
-    model <- match(input$detailedmodel,modelnames())
+    model <- match(input$detailedmodel,input$models)
     cm <- selected_models()
     cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     # Anzahl Klassen aus Konfusionsmatrix ermitteln
@@ -1396,7 +1397,7 @@ server = function(input, output, session) {
   
   treemapplot <- reactive({
     if(length(input$models) == 0){return()}
-    model <- match(input$detailedmodel,modelnames())
+    model <- match(input$detailedmodel,input$models)
     if(input$valueswitch == TRUE){
       data <- selected_models_missclassified_percentage()}
     else{
