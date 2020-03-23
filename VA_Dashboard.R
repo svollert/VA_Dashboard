@@ -96,6 +96,7 @@ ui = bs4DashPage(
   
   controlbar = bs4DashControlbar(skin = "light",
                                  title = "Controlbar",
+                                 width=400,
                                  h5(helpText(HTML("<br>Load Confusion Matrices"))),
                                  h6(helpText("Choose separator")),
                                  pickerInput(inputId = "sep", label = NULL, choices = c(Comma=",", Semicolon=";", Tab="\t", Space=" "), selected = ",", multiple = FALSE),
