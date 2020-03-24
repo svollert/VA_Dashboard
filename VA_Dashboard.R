@@ -123,7 +123,7 @@ ui = bs4DashPage(
                                  h5(helpText("Exclude irrelevant Classes")),
                                  uiOutput("classlimit"),
                                  h6(HTML("<hr>")),
-                                 h5(helpText("Display absolute or percentage values?")),
+                                 h5(helpText("Absolute or percentage values?")),
                                  switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
                                              size = "large")),
@@ -1629,16 +1629,15 @@ server = function(input, output, session) {
     updatePickerInput(session, "models", choices = available_models, selected = available_models)
   })
   
-  observeEvent(modelnames(), {
-    available_models <- modelnames()
+  observeEvent(input$models, {
+    available_models <- input$models
     updatePickerInput(session, "defaultmodel", choices = available_models, selected = available_models[1])
   })
-  
-  observeEvent(modelnames(), {
-    available_models <- modelnames()
+
+  observeEvent(input$models, {
+    available_models <- input$models
     updatePickerInput(session, "comparingmodel", choices = available_models, selected = available_models[2])
   })
-  
   
   observeEvent(modelnames(), {
     available_models <- modelnames()
