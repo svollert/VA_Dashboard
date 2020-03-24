@@ -126,7 +126,8 @@ ui = bs4DashPage(
                                  h5(helpText("Absolute or percentage values?")),
                                  switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
-                                             size = "large")),
+                                             size = "large"),
+                                 pickerInput(inputId = "fontsize", label = NULL, choices = c("Small" = 10, "Normal" = 12, "Large"=14, "Very Large"=16 ), selected = 12, multiple = FALSE)),
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
                                             h2("Comparison of different classification models"),
@@ -251,7 +252,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the classes"),
                                                                dropdownItem(name = "to show summarized information")
                                                              )),
-                                                     bs4Card(title = "Confusion Treemap", d3tree2Output("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Confusion Treemap", d3treeOutput("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can click on a tile"),
@@ -899,10 +900,16 @@ server = function(input, output, session) {
   output$sunburst_plot <- renderPlotly({
     if(is.null(input$models) || length(input$models) != (nrow(selected_models()) / ncol(selected_models()))){return()}
     data <- sunburst_data()
+    
+    t <- list(
+      size = input$fontsize)
+    
     if(input$valueswitch==TRUE){
-      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>'))
+      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Avg. Miss: %{value:.3p}', '<extra></extra>')) %>%
+        layout(font=t)
     }else{
-      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Total Miss: %{value:.i}', '<extra></extra>'))
+      p <- plot_ly(data, labels = ~labels, parents = ~parents, values = ~values, type="sunburst", maxdepth=4, marker = list(colors = c("#e0e0e0", unname(plotcolors()[1:max(length(input$models), length(colnames(selected_models())))]))), hovertemplate = paste('<b>%{label}</b><br>', 'Total Miss: %{value:.i}', '<extra></extra>')) %>%
+        layout(font=t)
     }
     p
   })
@@ -959,12 +966,16 @@ server = function(input, output, session) {
     
     loop_color = paste(loop_color, collapse = " ")
     
+    t <- list(
+      size = input$fontsize)
+    
     p <- data %>%
       plot_ly(type = 'parcoords',
               line = list(color = ~Models,
                           colorscale = eval(parse(text = loop_color))),
               dimensions = eval(parse(text = loop_liste ))
-      )
+      ) %>%
+      layout(font=t)
     p
   })
   
@@ -987,7 +998,12 @@ server = function(input, output, session) {
       cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
     }
     sums <- colSums(cm2)
-    p <- plot_ly(type = 'scatterpolar', mode = "lines")
+    
+    t <- list(
+      size = input$fontsize)
+    
+    p <- plot_ly(type = 'scatterpolar', mode = "lines") %>%
+      layout(font=t)
     i = 0
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
@@ -1026,7 +1042,12 @@ server = function(input, output, session) {
       cm2 <- cbind(cm2, cm[i:(i+ncol(cm)-1), ])
     }
     sums <- round(colSums(cm2),4)
-    p <- plot_ly(type = 'scatterpolar', mode = "lines")
+    
+    t <- list(
+      size = input$fontsize)
+    
+    p <- plot_ly(type = 'scatterpolar', mode = "lines") %>%
+      layout(font=t)
     i = 0
     for(j in seq(ncol(cm),nrow(cm),ncol(cm))){
       i = i+1
@@ -1098,9 +1119,12 @@ server = function(input, output, session) {
     # Farbskala mit Abstufungen von Blau
     col <- brewer.pal(n = 9, name = 'Blues')
     
+    t <- list(
+      size = input$fontsize)
+    
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", colors=col, hovertemplate = paste('<i>True Value </i>: %{x}<br><i>Pred. Value </i>: %{y}<br><i>Confusion Score </i>: %{z:.3f}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = new_data, showarrow = FALSE, font=list(color='black')) %>%
-      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"))
+      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"), font=t)
     p
   })
   
@@ -1172,10 +1196,13 @@ server = function(input, output, session) {
     col_green <- col_green[-(1:3)]
     col <- c(col_red, col_white, col_green)
     
+    t <- list(
+      size = input$fontsize)
+    
     p <- plot_ly(x = rownames(norm_data), y=colnames(norm_data), z=apply(norm_data, 2, rev), type="heatmap", 
                  colors = col, zauto = F, zmin = -1, zmax = 1, hovertemplate = paste('<i>True Value </i>: %{x}', '<br><i>Pred. Value </i>: %{y}', '<br><i>Comp. Index </i>: %{z:.3f}<extra></extra>')) %>%
       add_annotations(x=anno_x, y=anno_y, text = abs_norm_data, showarrow = FALSE, font=list(color='black')) %>%
-      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"))
+      layout(xaxis = list(title = "True Value"), yaxis = list(title = "Pred. Value"), font=t)
     p    
   })
   
@@ -1207,7 +1234,8 @@ server = function(input, output, session) {
     if(input$valueswitch == TRUE){
       cm <- round(cm,4)
     }
-    chorddiag(cm, type = "directional", showTicks = T, tickInterval = ticks, groupnameFontsize = 14, groupnamePadding = 30, groupPadding = 3, margin = 50, groupColors = unname(plotcolors()))
+    print(input$fontsize)
+    chorddiag(cm, type = "directional", showTicks = T, tickInterval = ticks, groupnameFontsize = input$fontsize, ticklabelFontsize = as.numeric(input$fontsize)-2, groupnamePadding = 30, groupPadding = 3, margin = 50, groupColors = unname(plotcolors()))
   })
   output$chorddiagramm <- renderChorddiag({chorddiagrammplot()})
   
@@ -1291,7 +1319,7 @@ server = function(input, output, session) {
       layout(
         title = "Sankey Diagram for Missclassification per Class",
         font = list(
-          size = 10
+          size = input$fontsize
         ),
         xaxis = list(showgrid = F, zeroline = F),
         yaxis = list(showgrid = F, zeroline = F)
@@ -1362,9 +1390,13 @@ server = function(input, output, session) {
     b <- list(
       range = c(newdata$Class[1], newdata$Class[length(classes)])
     )
+    
+    t <- list(
+      size = input$fontsize)
+    
     p <- plot_ly(newdata, x = ~Class, y = ~Sum, type = 'scatter', mode = "lines", name = "Value") %>% layout(xaxis = xform) %>%
       add_trace(y = seq((sum(selected_models())/ncol(selected_models()))/length(input$models),sum(selected_models())/length(input$models), (sum(selected_models())/ncol(selected_models()))/length(input$models)), name = 'Uniform Distribution',mode = 'lines') %>%
-      layout(xaxis = b)
+      layout(xaxis = b, font=t)
     p
   })
   output$lorenzcurve <- renderPlotly({lorenzplot()})
@@ -1387,9 +1419,15 @@ server = function(input, output, session) {
     data <- selected_models()
     counts <- colSums(data) / length(input$models)
     classes <- selected_classes()
+    
+    t <- list(
+      size = input$fontsize)
+    
+    
     p <- plot_ly() %>%
       add_trace(y=counts, x=classes, type = "bar", name = "Value") %>%
-      add_trace(x = classes, y = (sum(data)/ncol(data))/length(input$models), type = "scatter", mode = "lines", name = "Mean")
+      add_trace(x = classes, y = (sum(data)/ncol(data))/length(input$models), type = "scatter", mode = "lines", name = "Mean") %>%
+      layout(font=t)
     p
   })
   output$histogram <- renderPlotly({histogramplot()})
@@ -1435,11 +1473,11 @@ server = function(input, output, session) {
               palette=plotcolors()
     )            
     
-    inter=d3tree2( p ,  rootname = "All" )
+    inter=d3tree( p ,  rootname = "All")
     inter
     
   })
-  output$treemap <- renderD3tree2({treemapplot()})
+  output$treemap <- renderD3tree({treemapplot()})
   
   
   errorlineplot <- reactive({
@@ -1465,12 +1503,16 @@ server = function(input, output, session) {
     recall <- recall[(1+nrow(data)):(2*nrow(data)),1]
     macro_avg_recall <- colMeans(matrix(recall, ncol(data)))
     
+    
+    t <- list(
+      size = input$fontsize)
+    
     p <- plot_ly(x = models, y = acc, type = 'scatter', mode = 'lines+markers', name = "Model Accuracy", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Model Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = macro_avg_recall, type = "scatter", mode = "lines+markers", name = "Macro-Avg. Recall", hovertemplate = paste('<i>Model: </i> %{x}<br><i>Macro-Avg. Recall</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = average_acc, type = "scatter", mode = "lines", name = "Avg. Accuracy", hovertemplate = paste('<i>Avg. Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = max(colSums(data)) / sum(data), type = "scatter", mode = "lines", name = "Baseline Accuracy", hovertemplate = paste('<i>Baseline Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
       add_trace(x = models, y = 1/ncol(data), type = "scatter", mode = "lines", name = "Random Accuracy", hovertemplate = paste('<i>Random Accuracy</i>: %{y:.4p}<extra></extra>')) %>%
-      layout(xaxis = list(tickvals = models, tickmode = "array"))
+      layout(xaxis = list(tickvals = models, tickmode = "array"), font=t)
   })
   output$errorline <- renderPlotly({errorlineplot()})
   
@@ -1531,7 +1573,7 @@ server = function(input, output, session) {
   boxplotplot <- reactive({
     if(is.null(input$models)){return()}
     t <- list(
-      size = 14)
+      size = input$fontsize)
     results <- boxplot_calculation()
     p <- plot_ly(results, y = ~Score, x = ~Model, color=~Metric, type = "box") %>%
       layout(boxmode = "group", yaxis = list(title = "Score over all classes"), xaxis = list(tickvals = input$models, tickmode = "array"), font=t)
@@ -1571,9 +1613,12 @@ server = function(input, output, session) {
     y <- list(
       title = "Model Accuracy"
     )
+    t <- list(
+      size = input$fontsize)
+    
     modelnames <- factor(input$models, levels = input$models)
     p <- plot_ly(x = recallsd, y = acc, type = "scatter", mode = "markers", color = modelnames, colors = unname(plotcolors()[1:length(input$models)]), marker = list(size = 12), hovertemplate = paste('<i>Accuracy</i>: %{y:.4p}', '<br><i>Std</i>: %{x:.4p}'))%>%
-      layout(xaxis = x, yaxis = y)
+      layout(xaxis = x, yaxis = y, font=t)
     p
   })
   
@@ -1619,8 +1664,11 @@ server = function(input, output, session) {
 #      titlefont = f
     )
     
+    t <- list(
+      size = input$fontsize)
+    
     plot_ly(x=data$input.models, y=data$m_rank, type="bar", color = data$label, colors = c("#006D2C", "Orange", "#A50F15"), hovertemplate = paste('<i>Model</i>: %{x}', '<br><i>Score</i>: %{y:.4f}')) %>%
-      layout(yaxis = y, xaxis = list(tickvals = data$input.models, tickmode = "array"))
+      layout(yaxis = y, xaxis = list(tickvals = data$input.models, tickmode = "array"), font=t)
     
   })
   
