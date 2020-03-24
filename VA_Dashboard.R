@@ -529,7 +529,7 @@ server = function(input, output, session) {
   # Hierzu werden die dazugeh?rigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschr?nkt wird
   comparisondata <- reactive({
     if(is.null(data())){return ()}
-    options <- modelnames()
+    options <- input$models
     rows_d <- match(input$defaultmodel, options) 
     start <- (rows_d*ncol(selected_models())) - (ncol(selected_models())) + 1
     end <- rows_d*ncol(selected_models())
@@ -548,7 +548,7 @@ server = function(input, output, session) {
   # Hierzu werden die dazugeh?rigen Zeilensequenzen berechnet, sodass die Confusionmatrix auf diese beiden Modelle eingeschr?nkt wird  
   comparisondata_percentage <- reactive({
     if(is.null(data())){return ()}
-    options <- modelnames()
+    options <- input$models
     rows_d <- match(input$defaultmodel, options) 
     start <- (rows_d*ncol(selected_models_percentage())) - (ncol(selected_models_percentage())) + 1
     end <- rows_d*ncol(selected_models_percentage())
