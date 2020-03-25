@@ -1478,7 +1478,8 @@ server = function(input, output, session) {
                    text = ~paste(round(values, digits = 3)),
                    branchvalues = "total",
                    textinfo = "label+text",
-                   hoverinfo = "label+text"
+                   hoverinfo = "label+text",
+                   marker=list(colors=c("#FFFFFF", plotcolors()[1:ncol(cm)]))
     )
     fig
     
