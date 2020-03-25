@@ -127,6 +127,7 @@ ui = bs4DashPage(
                                  switchInput("valueswitch", label = NULL, value = TRUE, onLabel = "Percentages",
                                              offLabel = "Absolute", onStatus = "primary", offStatus = NULL,
                                              size = "large"),
+                                 h5(helpText("Select the font size")),
                                  pickerInput(inputId = "fontsize", label = NULL, choices = c("Small" = 10, "Normal" = 12, "Large"=14, "Very Large"=16 ), selected = 12, multiple = FALSE)),
   footer = bs4DashFooter(),
   body = bs4DashBody(bs4TabItems(bs4TabItem(tabName = "dashboard1",
@@ -142,7 +143,7 @@ ui = bs4DashPage(
                                                                 bs4TabPanel(tabName = "Model Rank", plotlyOutput("model_rank_plot")),
                                                                 bs4TabPanel(tabName = "Model Accuracies", plotlyOutput("errorline")),
                                                                 bs4TabPanel(tabName = "Boxplot", plotlyOutput("boxplot", width = "100%")),
-                                                                bs4TabPanel(tabName = "Metric Info", HTML("<ul><li>Model Rank: Score between 0 and 1, where Score near 0 corresponds to a weak model and Score near 1 corresponds to a good model.<br> The score is calculated by Macro-Avg. Recall Class Imbalances<li>Model Accuracy: Accuracy of the model. Number of correctly classified samples in relation to all samples.<li>Macro-Avg. Recall: Average percentage of correctly classi???ed instances of all classes of a model. This measure is robust against class imbalances. 
+                                                                bs4TabPanel(tabName = "Metric Info", HTML("<ul><li>Model Rank: Score between 0 and 1, where Score near 0 corresponds to a weak model and Score near 1 corresponds to a good model.<br> The score is calculated by Macro-Avg. Recall Class Imbalances<li>Model Accuracy: Accuracy of the model. Number of correctly classified samples in relation to all samples.<li>Macro-Avg. Recall: Average percentage of correctly classified instances of all classes of a model. This measure is robust against class imbalances. 
                                                                                                           <li>Avg. Accuracy: Average Accuracy across all models. <li>Baseline Accuracy: Accuracy of always predicting the most frequent class. <li>Random Accuracy: Accuracy of a completly random prediction.
                                                                                                           <li>Precision: Fraction of positive instances that were actually correct. <li>Recall: Percentage of correctly classified instances of a class. <li>F1-Score: Harmonic mean of precision and recall."))),
                                                      bs4Card(title = "Model Similarity Plot", plotlyOutput("acc_std_plot"), width = 4, closable = FALSE, status = "primary", maximizable = TRUE,
