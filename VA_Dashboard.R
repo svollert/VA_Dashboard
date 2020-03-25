@@ -884,7 +884,7 @@ server = function(input, output, session) {
       for (j in seq(1, ncol(data))) {
         for (k in seq(1, ncol(data))) {
           if (data[((i*ncol(data))-(ncol(data)-1)+(k-1)),j] != 0) {
-            labels <- c(labels, paste(input$models[i], vec_classes[j], vec_classes[k]))
+            labels <- c(labels, paste(input$models[i], vec_classes[j],"\U2bc8", vec_classes[k]))
             parents <- c(parents, paste(input$models[i], vec_classes[j]))
             values <- c(values, data[((i*ncol(data))-(ncol(data)-1)+(k-1)),j]) # Anzahl Fehlklassifizierungen je Classconfusion
           }
@@ -1445,15 +1445,15 @@ server = function(input, output, session) {
     cm <- data
     cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     
-    labels <- c("All")
+    labels <- c(input$detailedmodel)
     parents <- c("")
     values <- sum(cm)
     
     labels <- c(labels, colnames(cm))
-    parents <- c(parents, rep("All", ncol(cm)))
+    parents <- c(parents, rep(input$detailedmodel, ncol(cm)))
     values <- c(values, colSums(cm))
     
-    labels <- c(labels, paste(rep(colnames(cm), each=ncol(cm)), "-->", colnames(cm)))
+    labels <- c(labels, paste(rep(colnames(cm), each=ncol(cm)), "\U2bc8", colnames(cm)))
     parents <- c(parents, rep(colnames(cm), each=ncol(cm)))
     values <- c(values, unlist(cm))
     
@@ -1467,13 +1467,18 @@ server = function(input, output, session) {
     
     
     
-    fig <- plot_ly(
-      type="treemap",
-      labels=labels,
-      parents = parents,
-      values = values,
-      branchvalues = "total",
-      textinfo = "label+value"
+    df <- data.frame(labels, parents, values)
+    
+    
+    fig <- plot_ly(df,
+                   type="treemap",
+                   labels= ~labels,
+                   parents = ~parents,
+                   values = ~values,
+                   text = ~paste(round(values, digits = 3)),
+                   branchvalues = "total",
+                   textinfo = "label+text",
+                   hoverinfo = "label+text"
     )
     fig
     
