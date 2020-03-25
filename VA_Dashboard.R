@@ -252,7 +252,7 @@ ui = bs4DashPage(
                                                                dropdownItem(name = "You can hover over the classes"),
                                                                dropdownItem(name = "to show summarized information")
                                                              )),
-                                                     bs4Card(title = "Confusion Treemap", d3treeOutput("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
+                                                     bs4Card(title = "Confusion Treemap", plotlyOutput("treemap"),width = 6, closable = FALSE, status = "primary", maximizable = TRUE,
                                                              dropdownIcon = "question",
                                                              dropdownMenu = dropdownItemList(
                                                                dropdownItem(name = "You can click on a tile"),
@@ -1441,43 +1441,44 @@ server = function(input, output, session) {
       data <- selected_models_missclassified_percentage()}
     else{
       data <- selected_models_missclassified()}
-    data <- data[(model*ncol(data)-(ncol(data)-1)):(model*ncol(data)),]
-    classes <- selected_classes()
-    rownames(data) <- classes
-    colnames(data) <- classes
     
-    gr <- NULL
-    sub <- NULL
-    val <- NULL
+    cm <- data
+    cm <- cm[(model*ncol(cm)-(ncol(cm)-1)):(model*ncol(cm)),]
     
-    for (i in 1:ncol(selected_models())) {
-      for (j in 1:ncol(selected_models())) {
-        if (data[j,i] != 0) {
-          data[j,i]
-          gr <- append(gr, classes[i])
-          sub <- append(sub, sprintf("Missclassified As %s", classes[j]))
-          val <- append(val, data[j,i])     
-        }
-      }
-    }
+    labels <- c("All")
+    parents <- c("")
+    values <- sum(cm)
     
-    group=gr
-    subgroup=sub
-    value=val
-    data=data.frame(group,subgroup,value)
+    labels <- c(labels, colnames(cm))
+    parents <- c(parents, rep("All", ncol(cm)))
+    values <- c(values, colSums(cm))
     
-    p=treemap(data,
-              index=c("group","subgroup"),
-              vSize="value",
-              type="index",
-              palette=plotcolors()
-    )            
+    labels <- c(labels, paste(rep(colnames(cm), each=ncol(cm)), "-->", colnames(cm)))
+    parents <- c(parents, rep(colnames(cm), each=ncol(cm)))
+    values <- c(values, unlist(cm))
     
-    inter=d3tree( p ,  rootname = "All")
-    inter
+    id_null <- which(values == 0)
+    labels <- labels[-id_null] 
+    parents <- parents[-id_null]
+    values <- values[-id_null]
+    
+    
+    library(plotly)
+    
+    
+    
+    fig <- plot_ly(
+      type="treemap",
+      labels=labels,
+      parents = parents,
+      values = values,
+      branchvalues = "total",
+      textinfo = "label+value"
+    )
+    fig
     
   })
-  output$treemap <- renderD3tree({treemapplot()})
+  output$treemap <- renderPlotly({treemapplot()})
   
   
   errorlineplot <- reactive({
