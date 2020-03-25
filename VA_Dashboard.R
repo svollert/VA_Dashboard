@@ -1318,7 +1318,7 @@ server = function(input, output, session) {
       )
     ) %>% 
       layout(
-        title = "Sankey Diagram for Missclassification per Class",
+        title = "",
         font = list(
           size = input$fontsize
         ),
