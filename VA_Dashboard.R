@@ -1463,14 +1463,8 @@ server = function(input, output, session) {
     parents <- parents[-id_null]
     values <- values[-id_null]
     
-    
-    library(plotly)
-    
-    
-    
     df <- data.frame(labels, parents, values)
-    
-    
+  
     fig <- plot_ly(df,
                    type="treemap",
                    labels= ~labels,
@@ -1479,7 +1473,8 @@ server = function(input, output, session) {
                    text = ~paste(round(values, digits = 3)),
                    branchvalues = "total",
                    textinfo = "label+text",
-                   hoverinfo = "label+text"
+                   hoverinfo = "label+text",
+                   marker = list(colors=c("#FFFFFF", plotcolors()[1:ncol(cm)]))
     )
     fig
     
