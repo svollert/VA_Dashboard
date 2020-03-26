@@ -1464,18 +1464,34 @@ server = function(input, output, session) {
     values <- values[-id_null]
     
     df <- data.frame(labels, parents, values)
-  
+
+    
+    if(input$valueswitch == TRUE){
+
     fig <- plot_ly(df,
                    type="treemap",
                    labels= ~labels,
                    parents = ~parents,
                    values = ~values,
-                   text = ~paste(round(values, digits = 3)),
+                   text = ~paste("Percentage: ", round(values, digits = 3)*100, "%", sep = ""),
                    branchvalues = "total",
                    textinfo = "label+text",
                    hoverinfo = "label+text",
                    marker = list(colors=c("#FFFFFF", plotcolors()[1:ncol(cm)]))
     )
+    }else{
+      fig <- plot_ly(df,
+                     type="treemap",
+                     labels= ~labels,
+                     parents = ~parents,
+                     values = ~values,
+                     text = ~paste("Count:", round(values, digits = 3)),
+                     branchvalues = "total",
+                     textinfo = "label+text",
+                     hoverinfo = "label+text",
+                     marker=list(colors=c("#FFFFFF", plotcolors()[1:ncol(cm)]))
+    )}
+
     fig
     
   })
